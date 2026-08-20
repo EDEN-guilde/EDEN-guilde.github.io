@@ -12,7 +12,8 @@ Chaque raideur choisit sa classe et voit :
 - le niveau de prio de la guilde : Obligatoire, Importante, Stratégique, ou ouvert `MS > OS`.
 
 Filtres complémentaires : spécialisation, emplacement, raid, niveau de priorité, recherche libre.
-Chaque objet renvoie vers sa page Wowhead.
+Au survol d'un objet, son tooltip Wowhead complet s'affiche (stats, en français) ; un clic ouvre
+la page Wowhead. Le tooltip demande une connexion : hors ligne, les liens restent de simples liens.
 
 ## Mettre à jour
 
