@@ -300,9 +300,11 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
     </div>
 
     <div class="export">
-      <p class="sub" style="margin:0">Le bouton ci-dessus ouvre le simulateur avec l'équipement déjà
-        chargé. Le JSON ci-dessous ne sert que de secours, si le lien direct ne passait pas :
-        dans WoWSims, <code>Import</code> → <code>Sixty Upgrades</code>, coller, <code>Import</code>.</p>
+      <p class="sub" style="margin:0">Le bouton ouvre le simulateur avec l'équipement chargé,
+        <b>et copie le JSON ci-dessous</b> en même temps. Si les emplacements restent vides
+        (bug connu de WoWSims sur certaines machines) : <code>Import</code> →
+        <code>Sixty Upgrades</code> → <b>Ctrl+V</b> → <code>Import</code>. Ce chemin-là marche
+        toujours.</p>
       <p class="warn">L'import <b>remplace</b> tout l'équipement du simulateur : les emplacements
         laissés vides ici arrivent vides là-bas. Complète-les dans WoWSims avant de simuler,
         sinon le résultat ne veut rien dire.</p>
@@ -794,7 +796,9 @@ function zlibBrut(octets) {
    ("reading 'level'") et l'equipement n'est jamais applique — c'etait le bug
    du bouton. Classe, spe et talents restent absents : la page du simulateur
    fournit les siens. */
-const TPL_ROOT = Uint8Array.from(atob("eA4KAEIAEgAiAkgO"), c => c.charCodeAt(0));
+/* Sans champ « rencontre » : en envoyer une vide ecrase celle du raideur et
+   fait planter le calcul de cap de crit des sims melee. */
+const TPL_ROOT = Uint8Array.from(atob("eA4KAEIAEgA="), c => c.charCodeAt(0));
 const TPL_PLAYER = Uint8Array.from(atob("sAMOmgMGUGxheWVyIgBCAPIBBBICCgDaAgDiAgIYAYoDAA=="), c => c.charCodeAt(0));
 
 function lienWowsims(base, race, ids) {
@@ -973,6 +977,13 @@ $("#gearFromWish").onclick = () => {
                     : "Rien à ajouter";
   setTimeout(() => { b.textContent = "Remplir depuis ma wishlist"; }, 2200);
 };
+/* Sur certaines machines, WoWSims plante en appliquant le lien (bug de leur
+   import, variable selon l'ordre d'initialisation) et laisse l'equipement
+   vide. Le clic copie donc aussi le JSON : le plan B est un simple Ctrl+V. */
+$("#simLink").addEventListener("click", () => {
+  try { navigator.clipboard.writeText($("#gearJson").value); } catch (e) {}
+});
+
 $("#copyJson").onclick = async () => {
   const zone = $("#gearJson");
   try {
