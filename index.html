@@ -651,8 +651,10 @@ function medal(rank) {
     </svg>`;
 }
 
-/* Les notes du sheet sont en anglais de guilde ; le mode FR sert leur traduction. */
-const noteOf = d => (state.lang === "fr" && d.note_fr) ? d.note_fr : d.note;
+/* Les notes du sheet sont en anglais de guilde : on affiche toujours leur
+   traduction. Le selecteur FR/EN ne concerne que les noms d'objets, un raideur
+   pouvant vouloir les noms anglais et les consignes en francais. */
+const noteOf = d => d.note_fr || d.note;
 
 function badges(d) {
   let out = "";
