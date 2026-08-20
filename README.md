@@ -3,7 +3,7 @@
 Filtre de priorité de butin pour **Hyjal Summit** et **Black Temple** (TBC Classic, phase 3),
 guilde EDEN.
 
-👉 **[Ouvrir le site](https://giustoneyl-art.github.io/eden-loot-prio-p3/)**
+👉 **[Ouvrir le site](https://eden-guilde.github.io/eden-loot-prio-p3/)**
 
 Chaque raideur choisit sa classe et voit :
 
