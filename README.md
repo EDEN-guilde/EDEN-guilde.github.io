@@ -44,7 +44,7 @@ connexion : hors ligne, les liens restent de simples liens.
 Chaque raideur compose son set à partir du butin de Hyjal et du Black Temple : 17 emplacements,
 seuls les objets équipables par sa classe sont proposés, et le choix est mémorisé dans son
 navigateur. Le bouton **Ouvrir WoWSims** pointe vers le simulateur de sa spé, et le JSON généré
-s'importe directement : dans WoWSims,  →  → coller → .
+s'importe directement : dans WoWSims, `Import` → `Sixty Upgrades` → coller → `Import`.
 
 L'export a été vérifié sur wowsims.com : le simulateur place chaque objet d'après son type, pas
 d'après sa position, donc seuls les emplacements remplis sont exportés. Les **jetons T6** ne sont
