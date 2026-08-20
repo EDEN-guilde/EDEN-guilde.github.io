@@ -153,8 +153,8 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
     <h1>EDEN — Loots Hyjal &amp; Black Temple</h1>
     <p class="sub">Priorité de butin phase 3 — <b id="total">0</b> objets. Choisis ta classe.</p>
     <div class="lang" role="group" aria-label="Langue des noms d'objets">
-      <button type="button" id="langFR" title="Noms des objets en français">FR</button>
-      <button type="button" id="langEN" title="Noms des objets en anglais">EN</button>
+      <button type="button" id="langFR" aria-label="Noms des objets en français">FR</button>
+      <button type="button" id="langEN" aria-label="Noms des objets en anglais">EN</button>
     </div>
   </header>
 
@@ -372,8 +372,7 @@ function rowEl(d) {
     <span class="stripe"></span>
     ${rank}
     <div>
-      <a class="name" href="${esc(d.link)}" target="_blank" rel="noopener noreferrer"
-         title="${esc(d.prio)}">${esc(nameOf(d))}</a>
+      <a class="name" href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">${esc(nameOf(d))}</a>
       <div class="meta"><span>${esc(d.slot)}</span><span>${esc(d.sub)}</span><span>${esc(d.cat)}</span></div>
       <div class="chain">${chain}</div>
       ${d.note ? `<p class="note">${esc(d.note)}</p>` : ""}
