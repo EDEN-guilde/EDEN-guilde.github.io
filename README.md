@@ -13,7 +13,27 @@ Chaque raideur choisit sa classe et voit :
 - **combien de pièces T6 la classe vise** sur un jeton (`2p T6`, `4p T6`), repris du texte de priorité ;
 - le niveau de prio de la guilde : Obligatoire, Importante, Stratégique, ou ouvert `MS > OS`.
 
-Filtres complémentaires : spécialisation, emplacement, raid, niveau de priorité, recherche libre.
+Filtres complémentaires : spécialisation, **boss**, emplacement, raid, niveau de priorité
+(pastilles multi-sélection) et recherche libre. Chaque raideur peut cocher **« obtenu »** sur ce
+qu'il a déjà loot — mémorisé dans son navigateur, avec une option pour masquer ces lignes.
+Les objets marqués BiS dans le sheet et ceux dont la priorité est conditionnelle portent un badge.
+
+**Les filtres sont dans l'URL** : la barre d'adresse suit les clics, donc un lien par classe se
+colle sur le Discord et chacun peut mettre sa vue en favori.
+
+| Classe | Lien |
+|---|---|
+| Guerrier | `…/?c=Guerrier` |
+| Paladin | `…/?c=Paladin` |
+| Chasseur | `…/?c=Chasseur` |
+| Voleur | `…/?c=Voleur` |
+| Prêtre | `…/?c=Pr%C3%AAtre` |
+| Chaman | `…/?c=Chaman` |
+| Mage | `…/?c=Mage` |
+| Démoniste | `…/?c=D%C3%A9moniste` |
+| Druide | `…/?c=Druide` |
+
+On peut préciser : `?c=Chaman&s=Chaman%20Restauration&p=Obligatoire,Importante`.
 Au survol d'un objet, son tooltip Wowhead complet s'affiche ; un clic ouvre la page Wowhead.
 Le sélecteur **FR / EN** en haut à droite bascule les noms d'objets et les tooltips ; la recherche,
 elle, accepte les deux langues quelle que soit la position du sélecteur. Le tooltip demande une

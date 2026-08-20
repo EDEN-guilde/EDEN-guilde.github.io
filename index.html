@@ -258,7 +258,9 @@ const save = () => {
 const URLMAP = {c:"cls", s:"spe", b:"boss", r:"raid", e:"slot", q:"q", l:"lang"};
 function urlWrite() {
   const u = new URLSearchParams();
-  for (const [k, f] of Object.entries(URLMAP)) if (state[f]) u.set(k, state[f]);
+  for (const [k, f] of Object.entries(URLMAP)) {
+    if (state[f] && !(f === "lang" && state[f] === "en")) u.set(k, state[f]);  // en = defaut
+  }
   if (state.lvls.length) u.set("p", state.lvls.join(","));
   if (!state.onlyMine) u.set("n", "0");
   if (state.all) u.set("a", "1");
