@@ -8,12 +8,15 @@ guilde EDEN.
 Chaque raideur choisit sa classe et voit :
 
 - **ce qu'il peut équiper** (type d'armure, armes utilisables, jetons T6 de sa classe) ;
-- **où il est prioritaire**, avec son rang dans la chaîne de priorité (`Prio 2 / 4`) ;
+- **où il est prioritaire**, avec son rang dans la chaîne (`Prio 2 / 3`, et `ex æquo` quand
+  le sheet met deux classes à égalité avec un `=`) ;
 - le niveau de prio de la guilde : Obligatoire, Importante, Stratégique, ou ouvert `MS > OS`.
 
 Filtres complémentaires : spécialisation, emplacement, raid, niveau de priorité, recherche libre.
-Au survol d'un objet, son tooltip Wowhead complet s'affiche (stats, en français) ; un clic ouvre
-la page Wowhead. Le tooltip demande une connexion : hors ligne, les liens restent de simples liens.
+Au survol d'un objet, son tooltip Wowhead complet s'affiche ; un clic ouvre la page Wowhead.
+Le sélecteur **FR / EN** en haut à droite bascule les noms d'objets et les tooltips ; la recherche,
+elle, accepte les deux langues quelle que soit la position du sélecteur. Le tooltip demande une
+connexion : hors ligne, les liens restent de simples liens.
 
 ## Mettre à jour
 
