@@ -6,9 +6,9 @@ Hyjal + Black Temple, 198 objets. Rien à installer, rien à créer.
 
 ## 1. Clique ta classe
 
-C'est tout ce qu'il y a à faire. Par défaut tu ne vois que **les objets où ta classe est nommée
-dans la prio** — ta liste courte. Décoche « Seulement là où ma classe est nommée » pour voir
-aussi tout ce que tu peux porter en `MS > OS`.
+C'est tout ce qu'il y a à faire. Par défaut tu vois **les objets où ta classe est nommée
+dans la prio, plus ceux ouverts à tous** (`MS > OS`, sans classement) — ta liste courte.
+Décoche « Seulement ma liste » pour voir aussi les objets où d'autres classes sont prioritaires.
 
 L'adresse suit tes clics : mets-la en favori, tu retombes sur ta vue.
 
@@ -51,8 +51,13 @@ Compose ton set avec le butin des deux raids. Les emplacements se remplissent to
 
 ⚠️ L'import **remplace tout** dans le simulateur : les emplacements que tu n'as pas remplis ici
 arrivent vides là-bas. Complète-les dans WoWSims avant de simuler, sinon le DPS affiché ne veut
-rien dire. Les jetons T6 ne sont pas des objets équipables : prends la pièce T6 dans le
-simulateur.
+rien dire.
+
+Trois aides dans les listes : elles sont **triées par ta priorité** (🥇🥈🥉, ○ = ouvert
+`MS > OS`, – = autres classes prio), les **jetons T6 y figurent directement en pièce de ta
+classe** (un druide voit les trois variantes Cœur-de-tonnerre), et le menu **« Objets »**
+écarte le gear caster d'un DPS physique — et inversement. Les hybrides (druide, chaman,
+paladin) démarrent sur « Tous ».
 
 ---
 
