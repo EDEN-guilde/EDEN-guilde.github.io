@@ -39,6 +39,21 @@ Le sélecteur **FR / EN** en haut à droite bascule les noms d'objets et les too
 elle, accepte les deux langues quelle que soit la position du sélecteur. Le tooltip demande une
 connexion : hors ligne, les liens restent de simples liens.
 
+## Onglet « Mon stuff »
+
+Chaque raideur compose son set à partir du butin de Hyjal et du Black Temple : 17 emplacements,
+seuls les objets équipables par sa classe sont proposés, et le choix est mémorisé dans son
+navigateur. Le bouton **Ouvrir WoWSims** pointe vers le simulateur de sa spé, et le JSON généré
+s'importe directement : dans WoWSims,  →  → coller → .
+
+L'export a été vérifié sur wowsims.com : le simulateur place chaque objet d'après son type, pas
+d'après sa position, donc seuls les emplacements remplis sont exportés. Les **jetons T6** ne sont
+pas des objets équipables : ils sont signalés et exclus de l'export, la pièce T6 correspondante
+se choisit dans le simulateur.
+
+Le planificateur ne connaît que le butin de ces deux raids — ce n'est pas un Sixty Upgrades
+complet : ni pré-BiS, ni objets de T4/T5, ni enchantements, ni gemmes.
+
 ## Mettre à jour
 
 Le site est un fichier unique et autonome : `index.html` (données incluses, aucune dépendance).

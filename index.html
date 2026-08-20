@@ -157,6 +157,48 @@ select:hover,input[type=search]:hover{border-color:var(--gold-dim)}
 .empty b{display:block; font-family:"Cinzel",Georgia,serif; color:var(--ink); font-size:18px; margin-bottom:6px}
 footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
   font-size:12.5px; color:var(--ink-faint)}
+/* ---------- onglets ---------- */
+.views{display:flex; gap:4px; margin:16px 0 0}
+.views button{padding:8px 16px; cursor:pointer; background:transparent; color:var(--ink-faint);
+  border:1px solid var(--line); border-bottom:none; border-radius:var(--r) var(--r) 0 0;
+  font-size:13.5px; letter-spacing:.02em}
+.views button:hover{color:var(--ink)}
+.views button[aria-pressed="true"]{background:var(--surface); color:var(--gold);
+  border-color:var(--line); font-weight:600}
+.views + .panel, .views + section{border-top:1px solid var(--line); padding-top:16px}
+
+/* ---------- planificateur ---------- */
+.gear-head{display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:16px 0 6px}
+.gear-head label{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint)}
+.slots{display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:8px;
+  margin-top:14px}
+.slot{display:flex; flex-direction:column; gap:5px; padding:9px 12px; background:var(--surface);
+  border:1px solid var(--line-soft); border-radius:var(--r)}
+.slot.filled{border-color:var(--gold-dim)}
+.slot > span{font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint)}
+.slot select{width:100%; background:var(--surface-2); border:1px solid var(--line);
+  border-radius:var(--r); padding:6px 8px; font-size:13.5px}
+.slot .pick{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px;
+  color:var(--ink-faint)}
+.slot .pick .name{font-size:13.5px}
+.gear-sum{display:flex; flex-wrap:wrap; gap:10px 20px; align-items:center; margin-top:22px;
+  padding-top:16px; border-top:1px solid var(--line); font-size:13.5px; color:var(--ink-dim)}
+.gear-sum b{color:var(--ink)}
+.btn{padding:8px 14px; cursor:pointer; background:rgba(217,164,65,.14); color:var(--ink);
+  border:1px solid var(--gold); border-radius:var(--r); font-size:13.5px; text-decoration:none;
+  display:inline-block}
+.btn:hover{background:rgba(217,164,65,.24)}
+.btn.ghost{background:transparent; border-color:var(--line); color:var(--ink-dim)}
+.btn.ghost:hover{border-color:var(--gold-dim); color:var(--ink)}
+.export{margin-top:16px}
+.export textarea{width:100%; height:104px; margin-top:8px; padding:10px; resize:vertical;
+  background:#0B0A07; color:var(--ink-dim); border:1px solid var(--line); border-radius:var(--r);
+  font-family:ui-monospace,"Cascadia Mono",Consolas,monospace; font-size:11.5px; line-height:1.5}
+.export ol{margin:10px 0 0; padding-left:20px; color:var(--ink-dim); font-size:13px; line-height:1.7}
+.export code{background:var(--surface-2); padding:1px 5px; border-radius:3px; font-size:12px}
+.warn{margin-top:14px; padding:10px 12px; border-left:2px solid var(--import);
+  background:rgba(224,163,46,.07); font-size:12.5px; color:var(--ink-dim)}
+
 /* ---------- tooltip Wowhead ---------- */
 #tip{position:fixed; z-index:50; display:none; max-width:340px; pointer-events:none;
   background:#0B0A07; border:1px solid var(--line); border-radius:var(--r); padding:10px 12px;
@@ -182,7 +224,12 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
     </div>
   </header>
 
-  <section class="panel" aria-label="Filtres">
+  <nav class="views" role="tablist">
+    <button type="button" id="viewPrio" role="tab">Priorités de loot</button>
+    <button type="button" id="viewGear" role="tab">Mon stuff</button>
+  </nav>
+
+  <section class="panel" id="filters" aria-label="Filtres">
     <div class="field" role="group" aria-label="Classe">
       <span class="lbl">Classe</span>
       <div class="field" id="classes" style="gap:6px"></div>
@@ -217,6 +264,36 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
 
   <main id="list"></main>
 
+  <section id="gear" hidden>
+    <div class="gear-head">
+      <label for="gearCls">Classe</label>
+      <select id="gearCls"></select>
+      <label for="gearRace">Race</label>
+      <select id="gearRace"></select>
+      <button class="reset" id="gearReset" type="button">Vider mon stuff</button>
+    </div>
+    <p class="sub" style="max-width:70ch">Compose ton set avec le butin de Hyjal et du Black Temple,
+      puis envoie-le dans WoWSims pour le tester. Seuls les objets équipables par ta classe sont proposés.</p>
+
+    <div class="slots" id="slots"></div>
+
+    <div class="gear-sum">
+      <span id="gearCount">—</span>
+      <a class="btn" id="simLink" href="https://www.wowsims.com/tbc/" target="_blank" rel="noopener noreferrer">Ouvrir WoWSims</a>
+      <button class="btn ghost" id="copyJson" type="button">Copier le JSON</button>
+    </div>
+
+    <div class="export">
+      <ol>
+        <li>Copie le JSON ci-dessous</li>
+        <li>Dans WoWSims : <code>Import</code> → <code>Sixty Upgrades</code></li>
+        <li>Colle, puis <code>Import</code></li>
+      </ol>
+      <textarea id="gearJson" readonly aria-label="JSON à importer dans WoWSims"></textarea>
+      <p class="warn" id="gearWarn" hidden></p>
+    </div>
+  </section>
+
   <footer>
     Priorités reprises telles quelles du Google Sheet de la guilde ; les classes affichées sont déduites
     du texte de priorité (« Enhance » → Chaman Amélioration, « RSHAM » → Chaman Restauration, etc.).
@@ -231,7 +308,8 @@ const DATA = [{"raid":"Hyjal","boss":"Rage Winterchill","item":"Chronicle of Dar
 const CLASSES = ["Guerrier","Paladin","Chasseur","Voleur","Prêtre","Chaman","Mage","Démoniste","Druide"];
 const KEY = c => "--c-" + c.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
 const state = {cls:"", spe:"", raid:"", boss:"", slot:"", lvls:[], q:"",
-               onlyMine:true, all:false, hideOwned:false, lang:"en"};
+               onlyMine:true, all:false, hideOwned:false, lang:"en",
+               view:"prio", gearCls:""};
 const NIVEAUX = [["Obligatoire", "var(--oblig)"], ["Importante", "var(--import)"],
                  ["Stratégique", "var(--strat)"], ["Libre", "var(--libre)"]];
 DATA.forEach(d => { d.id = (d.link.match(/item=(\d+)/) || [])[1] || d.item; });
@@ -255,11 +333,12 @@ const save = () => {
 
 /* L'URL porte les filtres : un lien par classe se colle sur le Discord, et
    chacun peut mettre sa vue en favori. Les clés sont courtes exprès. */
-const URLMAP = {c:"cls", s:"spe", b:"boss", r:"raid", e:"slot", q:"q", l:"lang"};
+const URLMAP = {c:"cls", s:"spe", b:"boss", r:"raid", e:"slot", q:"q", l:"lang", v:"view", g:"gearCls"};
 function urlWrite() {
   const u = new URLSearchParams();
   for (const [k, f] of Object.entries(URLMAP)) {
-    if (state[f] && !(f === "lang" && state[f] === "en")) u.set(k, state[f]);  // en = defaut
+    if (state[f] && !(f === "lang" && state[f] === "en")
+        && !(f === "view" && state[f] === "prio")) u.set(k, state[f]);   // valeurs par defaut
   }
   if (state.lvls.length) u.set("p", state.lvls.join(","));
   if (!state.onlyMine) u.set("n", "0");
@@ -394,6 +473,15 @@ const tierOf = d => {
 const rankOf = tierOf;
 
 function render() {
+  const gearVue = state.view === "gear";
+  $("#viewPrio").setAttribute("aria-pressed", !gearVue);
+  $("#viewGear").setAttribute("aria-pressed", gearVue);
+  $("#filters").hidden = gearVue;
+  document.querySelector(".tally").hidden = gearVue;
+  $("#list").hidden = gearVue;
+  $("#gear").hidden = !gearVue;
+  if (gearVue) { renderGear(); save(); return; }
+
   /* refléter l'état dans les contrôles */
   [...clsBox.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.cls === state.cls));
   $("#langFR").setAttribute("aria-pressed", state.lang === "fr");
@@ -542,6 +630,163 @@ function rowEl(d) {
     </span>`;
   return el;
 }
+
+/* ================= planificateur de stuff =================
+   Les emplacements suivent l'ordre des slots de WoWSims : c'est cet ordre
+   qui est exporte, un emplacement vide restant un objet vide. */
+const SLOTS = [
+  ["Tête", ["Tête"]], ["Cou", ["Cou"]], ["Épaules", ["Épaules"]], ["Dos", ["Dos"]],
+  ["Torse", ["Torse"]], ["Poignets", ["Poignets"]], ["Mains", ["Mains"]], ["Taille", ["Taille"]],
+  ["Jambes", ["Jambes"]], ["Pieds", ["Pieds"]], ["Doigt 1", ["Doigt"]], ["Doigt 2", ["Doigt"]],
+  ["Bijou 1", ["Bijou"]], ["Bijou 2", ["Bijou"]], ["Arme", ["Arme"]],
+  ["Main gauche", ["Main gauche"]], ["Distance / Relique", ["Distance", "Relique"]],
+];
+const CLASSE_EN = {"Guerrier":"Warrior", "Paladin":"Paladin", "Chasseur":"Hunter", "Voleur":"Rogue",
+  "Prêtre":"Priest", "Chaman":"Shaman", "Mage":"Mage", "Démoniste":"Warlock", "Druide":"Druid"};
+const RACES = {
+  "Guerrier":["Orc","Tauren","Troll","Undead","Human","Dwarf","Night Elf","Gnome","Draenei"],
+  "Paladin":["Blood Elf","Human","Dwarf","Draenei"],
+  "Chasseur":["Orc","Troll","Tauren","Blood Elf","Dwarf","Night Elf","Draenei"],
+  "Voleur":["Orc","Troll","Undead","Blood Elf","Human","Dwarf","Night Elf","Gnome"],
+  "Prêtre":["Undead","Troll","Blood Elf","Human","Dwarf","Night Elf","Draenei"],
+  "Chaman":["Orc","Tauren","Troll","Draenei"],
+  "Mage":["Undead","Troll","Blood Elf","Human","Gnome","Draenei"],
+  "Démoniste":["Orc","Undead","Blood Elf","Human","Gnome"],
+  "Druide":["Tauren","Night Elf"],
+};
+/* WoWSims n'a pas un simulateur par spé : on route vers celui qui existe. */
+const SIMS = {
+  "Guerrier Protection":"warrior/protection", "Guerrier":"warrior/dps",
+  "Paladin Protection":"paladin/protection", "Paladin Sacré":"paladin/holy",
+  "Paladin Vindicte":"paladin/retribution", "Paladin":"paladin/retribution",
+  "Chasseur":"hunter/dps", "Voleur":"rogue/dps", "Prêtre":"priest/dps",
+  "Chaman Restauration":"shaman/restoration", "Chaman Élémentaire":"shaman/elemental",
+  "Chaman Amélioration":"shaman/enhancement", "Chaman":"shaman/elemental",
+  "Mage":"mage/dps", "Démoniste":"warlock/dps",
+  "Druide Équilibre":"druid/balance", "Druide Restauration":"druid/restoration",
+  "Druide Farouche Tank":"druid/feralbear", "Druide Farouche DPS":"druid/feralcat",
+  "Druide":"druid/balance",
+};
+
+let gear = {};
+try { gear = JSON.parse(localStorage.getItem("loot-tbc-gear") || "{}"); } catch (e) {}
+const saveGear = () => {
+  try { localStorage.setItem("loot-tbc-gear", JSON.stringify(gear)); } catch (e) {}
+};
+const gearCls = () => state.gearCls || state.cls || "Guerrier";
+const monGear = () => (gear[gearCls()] = gear[gearCls()] || {slots:{}, race:RACES[gearCls()][0]});
+
+/* Les emplacements doubles (Doigt 1/2, Bijou 1/2) : un anneau deja porte ne
+   doit pas etre proposable une seconde fois. */
+const JUMEAUX = {10:11, 11:10, 12:13, 13:12};
+
+function optionsPour(slotNoms, i) {
+  const cl = gearCls();
+  const jumeau = JUMEAUX[i] === undefined ? null : monGear().slots[JUMEAUX[i]];
+  return DATA
+    .filter(d => slotNoms.includes(d.slot) && d.elig.includes(cl))
+    .filter(d => d.id !== jumeau)
+    .filter((d, j, arr) => arr.findIndex(x => x.id === d.id) === j)   // Hyjal et BT partagent du trash
+    .sort((a, b) => nameOf(a).localeCompare(nameOf(b), "fr"));
+}
+
+function renderGear() {
+  const cl = gearCls(), mien = monGear();
+
+  const selCls = $("#gearCls");
+  if (!selCls.options.length) {
+    CLASSES.forEach(c => selCls.append(new Option(c, c)));
+    selCls.onchange = e => { state.gearCls = e.target.value; renderGear(); save(); };
+  }
+  selCls.value = cl;
+
+  const selRace = $("#gearRace");
+  selRace.innerHTML = "";
+  RACES[cl].forEach(r => selRace.append(new Option(r, r)));
+  if (!RACES[cl].includes(mien.race)) mien.race = RACES[cl][0];
+  selRace.value = mien.race;
+  selRace.onchange = e => { mien.race = e.target.value; saveGear(); renderGear(); };
+
+  const box = $("#slots");
+  box.innerHTML = "";
+  SLOTS.forEach(([nom, slotNoms], i) => {
+    const choisis = optionsPour(slotNoms, i);
+    const courant = mien.slots[i] || "";
+    const objet = DATA.find(d => d.id === courant);
+    const div = document.createElement("div");
+    div.className = "slot" + (objet ? " filled" : "");
+    const sel = document.createElement("select");
+    sel.setAttribute("aria-label", nom);
+    sel.append(new Option("— vide —", ""));
+    choisis.forEach(d => {
+      const jeton = d.cat === "Jeton" ? " [jeton]" : "";
+      sel.append(new Option(`${nameOf(d)} — ${d.boss}${jeton}`, d.id));
+    });
+    sel.value = courant;
+    sel.onchange = e => {
+      if (e.target.value) mien.slots[i] = e.target.value; else delete mien.slots[i];
+      saveGear();
+      renderGear();
+    };
+    div.innerHTML = `<span>${esc(nom)}</span>`;
+    div.append(sel);
+    if (objet) {
+      const p = document.createElement("p");
+      p.className = "pick";
+      p.innerHTML = `<a class="name" href="${esc(objet.link)}" target="_blank"
+        rel="noopener noreferrer">${esc(nameOf(objet))}</a>${badges(objet)}
+        <span>${esc(objet.niveau)}</span>`;
+      div.append(p);
+    }
+    box.append(div);
+  });
+
+  /* Export pour WoWSims : verifie sur le simulateur en ligne, il place chaque
+     objet d'apres son type et non d'apres sa position — les emplacements vides
+     sont donc a omettre, sinon l'import affiche un avertissement inutile. */
+  const jetons = [];
+  const items = [];
+  SLOTS.forEach(([nom], i) => {
+    const id = mien.slots[i];
+    if (!id) return;
+    const d = DATA.find(x => x.id === id);
+    if (d && d.cat === "Jeton") { jetons.push(nameOf(d)); return; }
+    items.push({id: Number(id)});
+  });
+  const pris = items.length;
+  $("#gearJson").value = JSON.stringify(
+    {character: {gameClass: CLASSE_EN[cl], race: mien.race}, items}, null, 1);
+
+  const spe = state.spe && state.spe.startsWith(cl) ? state.spe : cl;
+  $("#simLink").href = "https://www.wowsims.com/tbc/" + (SIMS[spe] || SIMS[cl] || "") + "/";
+  $("#gearCount").innerHTML = `<b>${pris}</b> pièce${pris > 1 ? "s" : ""} sur ${SLOTS.length} emplacements`;
+
+  const warn = $("#gearWarn");
+  warn.hidden = jetons.length === 0;
+  if (jetons.length) {
+    warn.textContent = "Les jetons ne sont pas des objets équipables : " + jetons.join(", ") +
+      " ne part pas dans WoWSims. Choisis-y la pièce T6 correspondante une fois dans le simulateur.";
+  }
+}
+
+$("#viewPrio").onclick = () => { state.view = "prio"; render(); };
+$("#viewGear").onclick = () => { state.view = "gear"; render(); };
+$("#gearReset").onclick = () => {
+  gear[gearCls()] = {slots:{}, race:RACES[gearCls()][0]};
+  saveGear();
+  renderGear();
+};
+$("#copyJson").onclick = async () => {
+  const zone = $("#gearJson");
+  try {
+    await navigator.clipboard.writeText(zone.value);
+    $("#copyJson").textContent = "Copié";
+  } catch (e) {
+    zone.select();                       // presse-papiers refusé : on sélectionne
+    $("#copyJson").textContent = "Fais Ctrl+C";
+  }
+  setTimeout(() => { $("#copyJson").textContent = "Copier le JSON"; }, 2000);
+};
 
 /* ---------- tooltip Wowhead ----------
    On interroge directement l'API de tooltip de Wowhead (données TBC, en français).
