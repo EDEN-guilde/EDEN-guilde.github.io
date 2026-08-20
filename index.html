@@ -143,6 +143,10 @@ select:hover,input[type=search]:hover{border-color:var(--gold-dim)}
   font-size:11px; font-weight:700; color:#1B1813}
 .row.owned{opacity:.4}
 .row.owned .name{text-decoration:line-through}
+.own.wish input:checked{background:#7FBEE0; border-color:#7FBEE0}
+.own.wish input:checked::after{color:#07202C}
+.row.wished{background:linear-gradient(90deg,rgba(127,190,224,.08),transparent 60%)}
+.row.wished:hover{background:linear-gradient(90deg,rgba(127,190,224,.13),var(--surface-2) 60%)}
 .pill .pc{margin-left:5px; padding:0 5px; border-radius:99px; font-size:10.5px; font-weight:700;
   color:#fff; background:rgba(255,255,255,.16)}
 .pill.open{--k:#8FA98F; background:rgba(143,169,143,.12)}
@@ -262,6 +266,7 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
       <label class="switch"><input type="checkbox" id="onlyMine"><span>Seulement là où ma classe est nommée</span></label>
       <label class="switch"><input type="checkbox" id="allItems"><span>Ignorer les restrictions d'équipement</span></label>
       <label class="switch"><input type="checkbox" id="hideOwned"><span>Masquer ce que j'ai déjà</span></label>
+      <label class="switch"><input type="checkbox" id="onlyWish"><span>Seulement ma wishlist</span></label>
       <button class="reset" id="reset" type="button">Réinitialiser</button>
     </div>
   </section>
@@ -280,6 +285,7 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
       <select id="gearCls"></select>
       <label for="gearRace">Race</label>
       <select id="gearRace"></select>
+      <button class="btn ghost" id="gearFromWish" type="button">Remplir depuis ma wishlist</button>
       <button class="reset" id="gearReset" type="button">Vider mon stuff</button>
     </div>
     <p class="sub" style="max-width:70ch">Compose ton set avec le butin de Hyjal et du Black Temple,
@@ -289,16 +295,14 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
 
     <div class="gear-sum">
       <span id="gearCount">—</span>
-      <a class="btn" id="simLink" href="https://www.wowsims.com/tbc/" target="_blank" rel="noopener noreferrer">Ouvrir WoWSims</a>
+      <a class="btn" id="simLink" href="https://www.wowsims.com/tbc/" target="_blank" rel="noopener noreferrer">Ouvrir dans WoWSims avec ce stuff</a>
       <button class="btn ghost" id="copyJson" type="button">Copier le JSON</button>
     </div>
 
     <div class="export">
-      <ol>
-        <li>Copie le JSON ci-dessous</li>
-        <li>Dans WoWSims : <code>Import</code> → <code>Sixty Upgrades</code></li>
-        <li>Colle, puis <code>Import</code></li>
-      </ol>
+      <p class="sub" style="margin:0">Le bouton ci-dessus ouvre le simulateur avec l'équipement déjà
+        chargé. Le JSON ci-dessous ne sert que de secours, si le lien direct ne passait pas :
+        dans WoWSims, <code>Import</code> → <code>Sixty Upgrades</code>, coller, <code>Import</code>.</p>
       <p class="warn">L'import <b>remplace</b> tout l'équipement du simulateur : les emplacements
         laissés vides ici arrivent vides là-bas. Complète-les dans WoWSims avant de simuler,
         sinon le résultat ne veut rien dire.</p>
@@ -321,7 +325,7 @@ const DATA = [{"raid":"Hyjal","boss":"Rage Winterchill","item":"Chronicle of Dar
 const CLASSES = ["Guerrier","Paladin","Chasseur","Voleur","Prêtre","Chaman","Mage","Démoniste","Druide"];
 const KEY = c => "--c-" + c.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
 const state = {cls:"", spe:"", raid:"", boss:"", slot:"", lvls:[], ranks:[], q:"",
-               onlyMine:true, all:false, hideOwned:false, lang:"en",
+               onlyMine:true, all:false, hideOwned:false, onlyWish:false, lang:"en",
                view:"prio", gearCls:""};
 const MEDAILLES = [["1", "1er", "#E8C061"], ["2", "2e", "#C3C8D1"],
                    ["3", "3e", "#C08552"], ["4", "4e et +", "#5C5040"]];
@@ -345,6 +349,13 @@ let owned = new Set();
 try { owned = new Set(JSON.parse(localStorage.getItem("loot-tbc-owned") || "[]")); } catch (e) {}
 const saveOwned = () => {
   try { localStorage.setItem("loot-tbc-owned", JSON.stringify([...owned])); } catch (e) {}
+};
+
+/* Wishlist : ce que le raideur vise. Elle alimente l'onglet « Mon stuff ». */
+let wish = new Set();
+try { wish = new Set(JSON.parse(localStorage.getItem("loot-tbc-wish") || "[]")); } catch (e) {}
+const saveWish = () => {
+  try { localStorage.setItem("loot-tbc-wish", JSON.stringify([...wish])); } catch (e) {}
 };
 const $ = s => document.querySelector(s);
 
@@ -371,6 +382,7 @@ function urlWrite() {
   if (!state.onlyMine) u.set("n", "0");
   if (state.all) u.set("a", "1");
   if (state.hideOwned) u.set("h", "1");
+  if (state.onlyWish) u.set("w", "1");
   const qs = u.toString();
   try {
     history.replaceState(null, "", qs ? "?" + qs : location.pathname);
@@ -388,6 +400,7 @@ function urlRead() {
   state.onlyMine = u.get("n") !== "0";
   state.all = u.get("a") === "1";
   state.hideOwned = u.get("h") === "1";
+  state.onlyWish = u.get("w") === "1";
 }
 urlRead();   // l'URL prime sur ce que le navigateur avait retenu
 
@@ -475,9 +488,10 @@ $("#q").oninput = e => { state.q = e.target.value; render(); };
 $("#onlyMine").onchange = e => { state.onlyMine = e.target.checked; render(); };
 $("#allItems").onchange = e => { state.all = e.target.checked; render(); };
 $("#hideOwned").onchange = e => { state.hideOwned = e.target.checked; render(); };
+$("#onlyWish").onchange = e => { state.onlyWish = e.target.checked; render(); };
 $("#reset").onclick = () => {
   Object.assign(state, {cls:"", spe:"", raid:"", boss:"", slot:"", lvls:[], ranks:[], q:"",
-                        onlyMine:true, all:false, hideOwned:false});
+                        onlyMine:true, all:false, hideOwned:false, onlyWish:false});
   fillBoss();
   render();
 };
@@ -494,6 +508,7 @@ function matches(d) {
   if (state.slot && d.slot !== state.slot) return false;
   if (state.lvls.length && !state.lvls.includes(d.niveau)) return false;
   if (state.hideOwned && owned.has(d.id)) return false;
+  if (state.onlyWish && !wish.has(d.id)) return false;
   if (state.cls) {
     const named = d.classes.includes(state.cls);
     if (state.onlyMine && !named) return false;
@@ -536,6 +551,7 @@ function render() {
   $("#raid").value = state.raid; $("#boss").value = state.boss; $("#slot").value = state.slot;
   $("#q").value = state.q; $("#onlyMine").checked = state.onlyMine; $("#allItems").checked = state.all;
   $("#hideOwned").checked = state.hideOwned;
+  $("#onlyWish").checked = state.onlyWish;
   [...priosBox.children].forEach(b =>
     b.setAttribute("aria-pressed", state.lvls.includes(b.dataset.niveau)));
   /* Le rang n'a de sens qu'une fois la classe choisie : sans elle, aucun objet
@@ -606,7 +622,9 @@ function render() {
 function tally(hits) {
   const mine = state.cls ? hits.filter(d => d.classes.includes(state.cls)).length : 0;
   const nbOwned = hits.filter(d => owned.has(d.id)).length;
-  const suffixe = nbOwned ? ` · <b>${nbOwned}</b> déjà obtenu${nbOwned > 1 ? "s" : ""}` : "";
+  const nbWish = hits.filter(d => wish.has(d.id)).length;
+  const suffixe = (nbOwned ? ` · <b>${nbOwned}</b> déjà obtenu${nbOwned > 1 ? "s" : ""}` : "") +
+                  (nbWish ? ` · <b>${nbWish}</b> en wishlist` : "");
   $("#count").innerHTML = (state.cls
     ? `<b>${hits.length}</b> objets pour un <b>${state.cls}</b> — dont <b>${mine}</b> où la classe est nommée dans la priorité`
     : `<b>${hits.length}</b> objets affichés`) + suffixe;
@@ -648,6 +666,7 @@ function rowEl(d) {
   const el = document.createElement("article");
   el.className = "row n-" + d.niveau.normalize("NFD").replace(/[̀-ͯ]/g, "");
   if (owned.has(d.id)) el.classList.add("owned");
+  if (wish.has(d.id)) el.classList.add("wished");
   const r = tierOf(d);
   const nbPaliers = d.paliers.length;
   let rank = `<span class="rank"></span>`;
@@ -685,8 +704,10 @@ function rowEl(d) {
       ${noteOf(d) ? `<p class="note">${esc(noteOf(d))}</p>` : ""}
     </div>
     <span class="lvl">${esc(d.niveau)}
-      <label class="own"><input type="checkbox" data-id="${esc(d.id)}"
+      <label class="own"><input type="checkbox" data-role="own" data-id="${esc(d.id)}"
         ${owned.has(d.id) ? "checked" : ""} aria-label="Objet déjà obtenu">obtenu</label>
+      <label class="own wish"><input type="checkbox" data-role="wish" data-id="${esc(d.id)}"
+        ${wish.has(d.id) ? "checked" : ""} aria-label="Ajouter à ma wishlist">wishlist</label>
     </span>`;
   return el;
 }
@@ -728,6 +749,38 @@ const SIMS = {
   "Druide":"druid/balance",
 };
 
+/* Valeurs des enums de WoWSims (proto/common.proto). */
+const SIM_CLASSE = {"Druide":1, "Chasseur":2, "Mage":3, "Paladin":4, "Prêtre":5,
+                    "Voleur":6, "Chaman":7, "Démoniste":8, "Guerrier":9};
+const SIM_RACE = {"Blood Elf":1, "Draenei":2, "Dwarf":3, "Gnome":4, "Human":5,
+                  "Night Elf":6, "Orc":7, "Tauren":8, "Troll":9, "Undead":11};
+
+/* Encodeur protobuf minimal : de quoi ecrire IndividualSimSettings{player{race,
+   class, equipment{items}}}, ce que WoWSims lit dans le fragment de l'URL.
+   L'equipement y est positionnel, un emplacement vide reste donc present. */
+const pbVarint = n => { const o = []; while (n > 127) { o.push((n & 127) | 128); n >>>= 7; } o.push(n); return o; };
+const pbCle = (num, type) => pbVarint((num << 3) | type);
+const pbMsg = (num, octets) => [...pbCle(num, 2), ...pbVarint(octets.length), ...octets];
+const pbNum = (num, val) => [...pbCle(num, 0), ...pbVarint(val)];
+
+async function lienWowsims(base, cl, race, ids) {
+  if (typeof CompressionStream === "undefined") return base;   // navigateur trop ancien
+  const items = [];
+  /* ItemSpec.id est le champ 1 sur le build en ligne de WoWSims — verifie en
+     decodant un export du simulateur lui-meme, le depot public etant plus recent. */
+  ids.forEach(id => items.push(...pbMsg(1, id ? pbNum(1, Number(id)) : [])));
+  const player = [...pbNum(1, SIM_RACE[race] || 0), ...pbNum(2, SIM_CLASSE[cl] || 0),
+                  ...pbMsg(3, items)];
+  const octets = new Uint8Array(pbMsg(3, player));             // IndividualSimSettings.player = 3
+  try {
+    const flux = new Blob([octets]).stream().pipeThrough(new CompressionStream("deflate"));
+    const buf = new Uint8Array(await new Response(flux).arrayBuffer());
+    let bin = "";
+    buf.forEach(b => bin += String.fromCharCode(b));
+    return base + "#" + btoa(bin);
+  } catch (e) { return base; }
+}
+
 let gear = {};
 try { gear = JSON.parse(localStorage.getItem("loot-tbc-gear") || "{}"); } catch (e) {}
 const saveGear = () => {
@@ -750,8 +803,35 @@ function optionsPour(slotNoms, i) {
     .sort((a, b) => nameOf(a).localeCompare(nameOf(b), "fr"));
 }
 
+/* Remplit les emplacements vides avec la wishlist : pour chaque emplacement, on
+   prend l'objet souhaité le mieux placé pour la classe (médaille, puis niveau de
+   priorité). Non destructif : un choix manuel n'est jamais écrasé. */
+function remplirDepuisWishlist() {
+  const cl = gearCls(), mien = monGear();
+  const rang = d => {
+    const i = d.paliers.findIndex(pal => pal.includes(cl));
+    return i < 0 ? 99 : i + 1;
+  };
+  const pris = new Set(Object.values(mien.slots));
+  let ajouts = 0;
+  SLOTS.forEach(([nom, slotNoms], i) => {
+    if (mien.slots[i]) return;
+    const candidat = DATA
+      .filter(d => wish.has(d.id) && slotNoms.includes(d.slot) && d.elig.includes(cl))
+      .filter(d => !pris.has(d.id) && d.cat !== "Jeton")
+      .sort((a, b) => rang(a) - rang(b) ||
+                      LVLORDER[a.niveau] - LVLORDER[b.niveau] ||
+                      nameOf(a).localeCompare(nameOf(b), "fr"))[0];
+    if (candidat) { mien.slots[i] = candidat.id; pris.add(candidat.id); ajouts++; }
+  });
+  if (ajouts) saveGear();
+  return ajouts;
+}
+
 function renderGear() {
   const cl = gearCls(), mien = monGear();
+  /* Première ouverture pour cette classe : on part de la wishlist. */
+  if (!mien.prerempli) { mien.prerempli = true; remplirDepuisWishlist(); }
 
   const selCls = $("#gearCls");
   if (!selCls.options.length) {
@@ -818,7 +898,16 @@ function renderGear() {
     {character: {gameClass: CLASSE_EN[cl], race: mien.race}, items}, null, 1);
 
   const spe = state.spe && state.spe.startsWith(cl) ? state.spe : cl;
-  $("#simLink").href = "https://www.wowsims.com/tbc/" + (SIMS[spe] || SIMS[cl] || "") + "/";
+  const base = "https://www.wowsims.com/tbc/" + (SIMS[spe] || SIMS[cl] || "") + "/";
+  /* Le lien porte l'équipement : un clic, pas de copier-coller. */
+  const positions = SLOTS.map(([nom], i) => {
+    const id = mien.slots[i];
+    if (!id) return 0;
+    const d = DATA.find(x => x.id === id);
+    return (d && d.cat === "Jeton") ? 0 : Number(id);
+  });
+  $("#simLink").href = base;
+  lienWowsims(base, cl, mien.race, positions).then(url => { $("#simLink").href = url; });
   $("#gearCount").innerHTML = `<b>${pris}</b> pièce${pris > 1 ? "s" : ""} sur ${SLOTS.length} emplacements`;
 
   const warn = $("#gearWarn");
@@ -832,9 +921,17 @@ function renderGear() {
 $("#viewPrio").onclick = () => { state.view = "prio"; render(); };
 $("#viewGear").onclick = () => { state.view = "gear"; render(); };
 $("#gearReset").onclick = () => {
-  gear[gearCls()] = {slots:{}, race:RACES[gearCls()][0]};
+  gear[gearCls()] = {slots:{}, race:RACES[gearCls()][0], prerempli:true};
   saveGear();
   renderGear();
+};
+$("#gearFromWish").onclick = () => {
+  const n = remplirDepuisWishlist();
+  renderGear();
+  const b = $("#gearFromWish");
+  b.textContent = n ? `${n} pièce${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""}`
+                    : "Rien à ajouter";
+  setTimeout(() => { b.textContent = "Remplir depuis ma wishlist"; }, 2200);
 };
 $("#copyJson").onclick = async () => {
   const zone = $("#gearJson");
@@ -913,16 +1010,18 @@ addEventListener("scroll", tipHide, {passive: true});
 /* Coche « obtenu » : on évite de reconstruire toute la liste, sauf si les objets
    obtenus sont masqués — auquel cas la ligne doit disparaître. */
 $("#list").addEventListener("change", e => {
-  const box = e.target.closest('.own input');
+  const box = e.target.closest(".own input");
   if (!box) return;
-  const id = box.dataset.id;
-  box.checked ? owned.add(id) : owned.delete(id);
-  saveOwned();
-  if (state.hideOwned) { render(); return; }
-  document.querySelectorAll(`.own input[data-id="${id}"]`).forEach(o => {
+  const id = box.dataset.id, role = box.dataset.role;
+  const jeu = role === "wish" ? wish : owned;
+  box.checked ? jeu.add(id) : jeu.delete(id);
+  role === "wish" ? saveWish() : saveOwned();
+  /* Un objet du trash apparaît dans les deux raids : les deux lignes suivent. */
+  document.querySelectorAll(`.own input[data-role="${role}"][data-id="${id}"]`).forEach(o => {
     o.checked = box.checked;
-    o.closest(".row").classList.toggle("owned", box.checked);
+    o.closest(".row").classList.toggle(role === "wish" ? "wished" : "owned", box.checked);
   });
+  if ((role === "own" && state.hideOwned) || (role === "wish" && state.onlyWish)) { render(); return; }
   tally(DATA.filter(matches));
 });
 

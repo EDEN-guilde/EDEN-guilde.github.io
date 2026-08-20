@@ -15,8 +15,8 @@ Chaque raideur choisit sa classe et voit :
 
 Filtres complémentaires : spécialisation, **médaille** (1er, 2e, 3e, 4e et +, multi-choix),
 **boss**, emplacement, raid, niveau de priorité
-(pastilles multi-sélection) et recherche libre. Chaque raideur peut cocher **« obtenu »** sur ce
-qu'il a déjà loot — mémorisé dans son navigateur, avec une option pour masquer ces lignes.
+(pastilles multi-sélection) et recherche libre. Chaque raideur peut cocher **« obtenu »** et **« wishlist »** sur ce
+qu'il a déjà loot ou vise — mémorisé dans son navigateur, avec une option pour masquer ces lignes.
 Les objets marqués BiS dans le sheet et ceux dont la priorité est conditionnelle portent un badge.
 
 **Les filtres sont dans l'URL** : la barre d'adresse suit les clics, donc un lien par classe se
@@ -44,8 +44,15 @@ connexion : hors ligne, les liens restent de simples liens.
 
 Chaque raideur compose son set à partir du butin de Hyjal et du Black Temple : 17 emplacements,
 seuls les objets équipables par sa classe sont proposés, et le choix est mémorisé dans son
-navigateur. Le bouton **Ouvrir WoWSims** pointe vers le simulateur de sa spé, et le JSON généré
-s'importe directement : dans WoWSims, `Import` → `Sixty Upgrades` → coller → `Import`.
+navigateur. Les emplacements se préremplissent avec la **wishlist** cochée dans l'autre onglet (bouton
+« Remplir depuis ma wishlist » pour recommencer), et le bouton **Ouvrir dans WoWSims avec ce
+stuff** ouvre le simulateur de la spé avec l'équipement déjà chargé — aucun copier-coller.
+
+Le lien encode l'équipement comme le fait l'export « Link » de WoWSims : protobuf compressé en
+deflate, encodé en base64, placé dans le fragment de l'URL. Les numéros de champ ont été relevés
+en décodant un export du simulateur lui-même — le dépôt public de wowsims est plus récent que le
+site en ligne et n'utilise pas les mêmes (`ItemSpec.id` y est passé du champ 1 au champ 2). Le
+JSON reste proposé en secours, pour l'import `Sixty Upgrades`.
 
 L'export a été vérifié sur wowsims.com : le simulateur place chaque objet d'après son type, pas
 d'après sa position, donc seuls les emplacements remplis sont exportés. Les **jetons T6** ne sont
