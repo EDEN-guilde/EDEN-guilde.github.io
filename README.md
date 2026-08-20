@@ -13,7 +13,8 @@ Chaque raideur choisit sa classe et voit :
 - **combien de pièces T6 la classe vise** sur un jeton (`2p T6`, `4p T6`), repris du texte de priorité ;
 - le niveau de prio de la guilde : Obligatoire, Importante, Stratégique, ou ouvert `MS > OS`.
 
-Filtres complémentaires : spécialisation, **boss**, emplacement, raid, niveau de priorité
+Filtres complémentaires : spécialisation, **médaille** (1er, 2e, 3e, 4e et +, multi-choix),
+**boss**, emplacement, raid, niveau de priorité
 (pastilles multi-sélection) et recherche libre. Chaque raideur peut cocher **« obtenu »** sur ce
 qu'il a déjà loot — mémorisé dans son navigateur, avec une option pour masquer ces lignes.
 Les objets marqués BiS dans le sheet et ceux dont la priorité est conditionnelle portent un badge.
