@@ -798,9 +798,12 @@ function zlibBrut(octets) {
    ("reading 'level'") et l'equipement n'est jamais applique — c'etait le bug
    du bouton. Classe, spe et talents restent absents : la page du simulateur
    fournit les siens. */
-/* Sans champ « rencontre » : en envoyer une vide ecrase celle du raideur et
-   fait planter le calcul de cap de crit des sims melee. */
-const TPL_ROOT = Uint8Array.from(atob("eA4KAEIAEgA="), c => c.charCodeAt(0));
+/* La racine embarque la rencontre PAR DEFAUT complete du simulateur (cible
+   « Raid Target » niveau 73), relevee sur un export reel. L'import « Link »
+   remplace TOUT, rencontre comprise : l'omettre revient a en installer une
+   vide, ce qui fait planter le calcul de cap de crit des sims melee — et ce
+   crash empeche l'equipement de s'afficher sur certaines machines. */
+const TPL_ROOT = Uint8Array.from(atob("eA4KAEIAEgAizQNIDgkAAAAAAIBmQBEAAAAAAAAUQBmamZmZmZnJPzkAAAAAAADQPyFmZmZmZmbWP1HNzMzMzMzcP0HNzMzMzMzsPzKJA3Cq8wF6C1JhaWQgVGFyZ2V0IEkYByrQAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFvkAAAAAAAAAAAAAAAAAgKFdBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADkAAAAAgITNQJkBAAAAAAAA4D9BAAAAAAAAAEBgAYgBAQ=="), c => c.charCodeAt(0));
 const TPL_PLAYER = Uint8Array.from(atob("sAMOmgMGUGxheWVyIgBCAPIBBBICCgDaAgDiAgIYAYoDAA=="), c => c.charCodeAt(0));
 
 function lienWowsims(base, race, ids) {
