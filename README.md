@@ -60,9 +60,13 @@ n'ayant pas les mêmes valeurs :
 - l'enum des races diffère sur un point : Mort-vivant vaut **10** en ligne, 11 dans le dépôt. Les
   dix races ont été vérifiées une par une.
 
-L'enveloppe zlib est écrite sans compression (blocs « stored ») pour rester synchrone : avec
-`CompressionStream`, le lien n'était prêt qu'après le clic du raideur. Le JSON reste proposé en
-secours, pour l'import `Sixty Upgrades`.
+Le fragment doit contenir un réglage **complet** — buffs, rencontre, tronc du joueur — sinon
+l'import du simulateur plante en silence et n'applique rien : le lien embarque donc un gabarit
+minimal (46 octets) relevé sur un export « Link » réel, auquel sont greffés la race et
+l'équipement. Vérifié visuellement, stockage vidé, sur les simulateurs voleur, chaman élémentaire
+et chasseur. L'enveloppe zlib est écrite sans compression (blocs « stored ») pour rester
+synchrone : avec `CompressionStream`, le lien n'était prêt qu'après le clic du raideur. Le JSON
+reste proposé en secours, pour l'import `Sixty Upgrades`.
 
 L'export a été vérifié sur wowsims.com : le simulateur place chaque objet d'après son type, pas
 d'après sa position, donc seuls les emplacements remplis sont exportés. Les **jetons T6** ne sont

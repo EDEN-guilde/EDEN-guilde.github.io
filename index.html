@@ -788,13 +788,22 @@ function zlibBrut(octets) {
   return new Uint8Array(out);
 }
 
+/* Gabarit minimal releve sur un export « Link » reel du simulateur : la racine
+   (buffs, rencontre, version des donnees) et le tronc du joueur (niveau,
+   consommables vides, nom). Sans eux, l'import du fragment PLANTE en silence
+   ("reading 'level'") et l'equipement n'est jamais applique — c'etait le bug
+   du bouton. Classe, spe et talents restent absents : la page du simulateur
+   fournit les siens. */
+const TPL_ROOT = Uint8Array.from(atob("eA4KAEIAEgAiAkgO"), c => c.charCodeAt(0));
+const TPL_PLAYER = Uint8Array.from(atob("sAMOmgMGUGxheWVyIgBCAPIBBBICCgDaAgDiAgIYAYoDAA=="), c => c.charCodeAt(0));
+
 function lienWowsims(base, race, ids) {
   const items = [];
   /* ItemSpec.id est le champ 1 sur le build en ligne de WoWSims — verifie en
      decodant un export du simulateur lui-meme, le depot public etant plus recent. */
   ids.forEach(id => items.push(...pbMsg(1, id ? pbNum(1, Number(id)) : [])));
-  const player = [...pbNum(1, SIM_RACE[race] || 0), ...pbMsg(3, items)];
-  const octets = new Uint8Array(pbMsg(3, player));             // IndividualSimSettings.player = 3
+  const player = [...TPL_PLAYER, ...pbNum(1, SIM_RACE[race] || 0), ...pbMsg(3, items)];
+  const octets = new Uint8Array([...TPL_ROOT, ...pbMsg(3, player)]);
   try {
     const buf = zlibBrut(octets);
     let bin = "";
