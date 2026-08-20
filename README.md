@@ -8,8 +8,9 @@ guilde EDEN.
 Chaque raideur choisit sa classe et voit :
 
 - **ce qu'il peut équiper** (type d'armure, armes utilisables, jetons T6 de sa classe) ;
-- **où il est prioritaire**, avec son rang dans la chaîne (`Prio 2 / 3`, et `ex æquo` quand
-  le sheet met deux classes à égalité avec un `=`) ;
+- **où il est prioritaire**, sous forme de médaille (or, argent, bronze, puis pastille numérotée),
+  avec la mention `ex æquo` quand le sheet met deux classes à égalité avec un `=` ;
+- **combien de pièces T6 la classe vise** sur un jeton (`2p T6`, `4p T6`), repris du texte de priorité ;
 - le niveau de prio de la guilde : Obligatoire, Importante, Stratégique, ou ouvert `MS > OS`.
 
 Filtres complémentaires : spécialisation, emplacement, raid, niveau de priorité, recherche libre.
