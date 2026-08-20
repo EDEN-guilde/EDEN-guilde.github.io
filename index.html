@@ -751,11 +751,14 @@ const SIMS = {
   "Druide":"druid/balance",
 };
 
-/* Valeurs des enums de WoWSims (proto/common.proto). */
-const SIM_CLASSE = {"Druide":1, "Chasseur":2, "Mage":3, "Paladin":4, "Prêtre":5,
-                    "Voleur":6, "Chaman":7, "Démoniste":8, "Guerrier":9};
+/* Enum des races du build en ligne de WoWSims, relevee race par race en
+   important puis reexportant depuis le simulateur. Elle ne suit PAS le depot
+   public, ou Undead vaut 11 : ici c'est 10.
+   La classe, elle, n'est pas envoyee du tout — son enum differe aussi (le
+   voleur y vaut 4 et non 6) et chaque page de simulateur connait deja la
+   sienne. Envoyer une mauvaise valeur faisait rejeter tout l'equipement. */
 const SIM_RACE = {"Blood Elf":1, "Draenei":2, "Dwarf":3, "Gnome":4, "Human":5,
-                  "Night Elf":6, "Orc":7, "Tauren":8, "Troll":9, "Undead":11};
+                  "Night Elf":6, "Orc":7, "Tauren":8, "Troll":9, "Undead":10};
 
 /* Encodeur protobuf minimal : de quoi ecrire IndividualSimSettings{player{race,
    class, equipment{items}}}, ce que WoWSims lit dans le fragment de l'URL.
@@ -765,18 +768,35 @@ const pbCle = (num, type) => pbVarint((num << 3) | type);
 const pbMsg = (num, octets) => [...pbCle(num, 2), ...pbVarint(octets.length), ...octets];
 const pbNum = (num, val) => [...pbCle(num, 0), ...pbVarint(val)];
 
-async function lienWowsims(base, cl, race, ids) {
-  if (typeof CompressionStream === "undefined") return base;   // navigateur trop ancien
+/* Enveloppe zlib sans compression : le format attendu par WoWSims accepte les
+   blocs « stored », et cela evite CompressionStream, qui est asynchrone — le
+   lien serait alors pret trop tard si le raideur clique aussitot. */
+function zlibBrut(octets) {
+  const out = [0x78, 0x01];
+  let i = 0;
+  do {
+    const bloc = octets.slice(i, i + 65535);
+    i += bloc.length;
+    out.push(i >= octets.length ? 1 : 0,
+             bloc.length & 255, bloc.length >>> 8,
+             ~bloc.length & 255, (~bloc.length >>> 8) & 255,
+             ...bloc);
+  } while (i < octets.length);
+  let a = 1, b = 0;
+  octets.forEach(o => { a = (a + o) % 65521; b = (b + a) % 65521; });
+  out.push(b >>> 8, b & 255, a >>> 8, a & 255);          // Adler-32
+  return new Uint8Array(out);
+}
+
+function lienWowsims(base, race, ids) {
   const items = [];
   /* ItemSpec.id est le champ 1 sur le build en ligne de WoWSims — verifie en
      decodant un export du simulateur lui-meme, le depot public etant plus recent. */
   ids.forEach(id => items.push(...pbMsg(1, id ? pbNum(1, Number(id)) : [])));
-  const player = [...pbNum(1, SIM_RACE[race] || 0), ...pbNum(2, SIM_CLASSE[cl] || 0),
-                  ...pbMsg(3, items)];
+  const player = [...pbNum(1, SIM_RACE[race] || 0), ...pbMsg(3, items)];
   const octets = new Uint8Array(pbMsg(3, player));             // IndividualSimSettings.player = 3
   try {
-    const flux = new Blob([octets]).stream().pipeThrough(new CompressionStream("deflate"));
-    const buf = new Uint8Array(await new Response(flux).arrayBuffer());
+    const buf = zlibBrut(octets);
     let bin = "";
     buf.forEach(b => bin += String.fromCharCode(b));
     return base + "#" + btoa(bin);
@@ -793,13 +813,23 @@ const monGear = () => (gear[gearCls()] = gear[gearCls()] || {slots:{}, race:RACE
 
 /* Les emplacements doubles (Doigt 1/2, Bijou 1/2) : un anneau deja porte ne
    doit pas etre proposable une seconde fois. */
-const JUMEAUX = {10:11, 11:10, 12:13, 13:12};
+const JUMEAUX = {10:11, 11:10, 12:13, 13:12, 14:15, 15:14};
+const MAIN_GAUCHE = 15;
+
+/* Ces classes portent deux armes : leur main gauche accepte une arme a une
+   main, pas seulement un bouclier ou un objet tenu. Sans cela, un voleur ou un
+   chasseur n'avait aucun choix dans cet emplacement. */
+const DEUX_ARMES = ["Guerrier", "Voleur", "Chasseur", "Chaman"];
+const UNE_MAIN = ["Dague", "Épée 1M", "Masse 1M", "Hache 1M", "Arme de poing"];
 
 function optionsPour(slotNoms, i) {
   const cl = gearCls();
   const jumeau = JUMEAUX[i] === undefined ? null : monGear().slots[JUMEAUX[i]];
+  const armeMG = i === MAIN_GAUCHE && DEUX_ARMES.includes(cl);
   return DATA
-    .filter(d => slotNoms.includes(d.slot) && d.elig.includes(cl))
+    .filter(d => (slotNoms.includes(d.slot) ||
+                  (armeMG && d.slot === "Arme" && UNE_MAIN.includes(d.sub))) &&
+                 d.elig.includes(cl))
     .filter(d => d.id !== jumeau)
     .filter((d, j, arr) => arr.findIndex(x => x.id === d.id) === j)   // Hyjal et BT partagent du trash
     .sort((a, b) => nameOf(a).localeCompare(nameOf(b), "fr"));
@@ -908,8 +938,7 @@ function renderGear() {
     const d = DATA.find(x => x.id === id);
     return (d && d.cat === "Jeton") ? 0 : Number(id);
   });
-  $("#simLink").href = base;
-  lienWowsims(base, cl, mien.race, positions).then(url => { $("#simLink").href = url; });
+  $("#simLink").href = lienWowsims(base, mien.race, positions);
   $("#gearCount").innerHTML = `<b>${pris}</b> pièce${pris > 1 ? "s" : ""} sur ${SLOTS.length} emplacements`;
 
   const warn = $("#gearWarn");

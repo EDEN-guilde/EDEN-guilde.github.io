@@ -48,11 +48,21 @@ navigateur. Les emplacements se préremplissent avec la **wishlist** cochée dan
 « Remplir depuis ma wishlist » pour recommencer), et le bouton **Ouvrir dans WoWSims avec ce
 stuff** ouvre le simulateur de la spé avec l'équipement déjà chargé — aucun copier-coller.
 
-Le lien encode l'équipement comme le fait l'export « Link » de WoWSims : protobuf compressé en
-deflate, encodé en base64, placé dans le fragment de l'URL. Les numéros de champ ont été relevés
-en décodant un export du simulateur lui-même — le dépôt public de wowsims est plus récent que le
-site en ligne et n'utilise pas les mêmes (`ItemSpec.id` y est passé du champ 1 au champ 2). Le
-JSON reste proposé en secours, pour l'import `Sixty Upgrades`.
+Le lien encode l'équipement comme le fait l'export « Link » de WoWSims : protobuf, enveloppe
+zlib, base64, dans le fragment de l'URL. **Tout a été relevé en décodant des exports du
+simulateur lui-même**, le dépôt public de wowsims étant plus récent que le site en ligne et
+n'ayant pas les mêmes valeurs :
+
+- `ItemSpec.id` est le champ **1** en ligne (2 dans le dépôt) ;
+- l'enum des classes diffère (le voleur y vaut 4, pas 6) : la classe n'est **pas** envoyée, chaque
+  page de simulateur connaît déjà la sienne, et une mauvaise valeur faisait rejeter tout
+  l'équipement ;
+- l'enum des races diffère sur un point : Mort-vivant vaut **10** en ligne, 11 dans le dépôt. Les
+  dix races ont été vérifiées une par une.
+
+L'enveloppe zlib est écrite sans compression (blocs « stored ») pour rester synchrone : avec
+`CompressionStream`, le lien n'était prêt qu'après le clic du raideur. Le JSON reste proposé en
+secours, pour l'import `Sixty Upgrades`.
 
 L'export a été vérifié sur wowsims.com : le simulateur place chaque objet d'après son type, pas
 d'après sa position, donc seuls les emplacements remplis sont exportés. Les **jetons T6** ne sont
