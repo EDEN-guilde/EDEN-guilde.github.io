@@ -38,6 +38,9 @@ h1{font-family:"Cinzel",Georgia,serif; font-weight:700; font-size:clamp(24px,3.4
 .sub b{color:var(--ink); font-weight:600}
 
 /* ---------- panneau de contrôle ---------- */
+/* Nos display:flex/grid ecraseraient sinon le display:none navigateur de
+   l'attribut hidden : le panneau de filtres restait visible en vue Mon stuff. */
+[hidden]{display:none!important}
 .panel{display:flex; flex-direction:column; gap:14px; padding:18px 0 16px; border-bottom:1px solid var(--line)}
 .field{display:flex; flex-wrap:wrap; align-items:center; gap:8px}
 .lbl{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint);
