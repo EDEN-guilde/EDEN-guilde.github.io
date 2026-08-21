@@ -1238,6 +1238,20 @@ const rangPour = (d, cl) => {
   const i = d.paliers.findIndex(pal => pal.includes(cl));
   return i < 0 ? 99 : i + 1;
 };
+/* Rang côté planificateur : tient compte du rôle choisi dans « Objets ».
+   Si le sheet nomme des spés de la classe et qu'aucune ne correspond au rôle
+   (jeton Conqueror « Paladin Protection » vu par un paladin Soins), la prio
+   ne vaut pas pour ce personnage → « – », comme dans l'onglet Priorités.
+   Une mention générique laisse le rôle de l'objet arbitrer. */
+const rangGear = (d, cl) => {
+  const r = rangPour(d, cl);
+  const pref = monGear().role || "tous";
+  if (r === 99 || pref === "tous") return r;
+  const spesCl = d.spes.filter(s => s.startsWith(cl + " "));
+  if (spesCl.some(s => (ROLE_SPE[s] || []).includes(pref))) return r;
+  if (spesCl.length && !d.gen.includes(cl)) return 99;
+  return compatibleRoles(d.roles, [pref]) ? r : 99;
+};
 
 /* Les emplacements doubles (Doigt 1/2, Bijou 1/2) : un anneau deja porte ne
    doit pas etre proposable une seconde fois. */
@@ -1283,7 +1297,7 @@ function remplirDepuisWishlist() {
     const candidats = DATA
       .filter(d => wish.has(d.id) && slotNoms.includes(d.slot) && d.elig.includes(cl) &&
                    armeOK(d, i))
-      .sort((a, b) => rangPour(a, cl) - rangPour(b, cl) ||
+      .sort((a, b) => rangGear(a, cl) - rangGear(b, cl) ||
                       LVLORDER[a.niveau] - LVLORDER[b.niveau] ||
                       nameOf(a).localeCompare(nameOf(b), "fr"));
     for (const d of candidats) {
@@ -1372,7 +1386,7 @@ function renderGear() {
        Un jeton apparait directement en piece(s) T6 de la classe. */
     const opts = [];
     choisis.forEach(d => {
-      const r = rangPour(d, cl);
+      const r = rangGear(d, cl);
       const tie = r < 99 && d.paliers[r - 1].length > 1;
       const tri = r < 99 ? r : (d.paliers.length ? 99 : 50);
       const pre = (r === 1 ? "🥇" : r === 2 ? "🥈" : r === 3 ? "🥉" : r < 99 ? r + "e" :
@@ -1409,7 +1423,7 @@ function renderGear() {
       const lien = objet ? objet.link : "https://www.wowhead.com/tbc/item=" + courant;
       const nomAff = objet ? nameOf(objet) : (state.lang === "fr" ? piece.fr : piece.en) + " (T6)";
       const icone = objet ? objet.ico : piece.ico;
-      const r = dPrio ? rangPour(dPrio, cl) : 99;
+      const r = dPrio ? rangGear(dPrio, cl) : 99;
       const med = r < 99 ? medal(r) : "";
       const p = document.createElement("p");
       p.className = "pick";
