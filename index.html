@@ -551,7 +551,7 @@ $("#langEN").onclick = () => { state.lang = "en"; tipHide(); render(); };
    d.roles — vide = neutre (endurance, resistances), toujours montre. */
 const ROLE_SPE = {
   "Guerrier Armes":["dpsphys"], "Guerrier Fureur":["dpsphys"],
-  "Guerrier Protection":["tank", "dpsphys"],
+  "Guerrier Protection":["tank"],
   "Chasseur Maîtrise des bêtes":["dpsphys"], "Chasseur Survie":["dpsphys"],
   "Druide Farouche DPS":["dpsphys"], "Druide Farouche Tank":["dpsphys", "tank"],
   "Druide Équilibre":["dpssorts"], "Druide Restauration":["soins"],
@@ -592,10 +592,14 @@ function matches(d) {
        ou autres classes prio) n'est montre que si son role colle a la spe —
        ou a la classe seule quand elle n'a qu'un role possible : un feral ne
        voit plus les objets casters « libres », ni l'inverse. */
-    if (spe && d.spes.some(x => x.startsWith(state.cls + " ")) &&
-        !d.spes.includes(spe)) return false;
+    const detaille = d.spes.some(x => x.startsWith(state.cls + " "));
+    if (spe && detaille && !d.spes.includes(spe)) return false;
     const attendu = spe ? ROLE_SPE[spe] : ROLE_CLASSE[state.cls];
-    if (!named && !compatibleRoles(d.roles, attendu)) return false;
+    /* Le role de l'objet arbitre des que le sheet ne tranche pas lui-meme :
+       objets ouverts, autres classes prio, et — spe choisie — objets qui
+       nomment la classe sans preciser la spe (« Guerrier » sur une hache DPS
+       ne concerne pas la Protection). Une spe nommee reste souveraine. */
+    if ((!named || (spe && !detaille)) && !compatibleRoles(d.roles, attendu)) return false;
     if (state.ranks.length) {
       /* « Ouvert » = aucun classement du tout ; un objet ou d'autres classes
          sont prioritaires ne correspond a aucune puce. */
