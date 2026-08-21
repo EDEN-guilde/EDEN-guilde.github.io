@@ -47,7 +47,9 @@ de zéro. Si un bandeau orange apparaît en haut, c'est que ton navigateur bloqu
 Compose ton set avec le butin des deux raids. Les emplacements se remplissent tout seuls avec
 **ta wishlist**, tu ajustes au menu déroulant, puis :
 
-**« Ouvrir dans WoWSims avec ce stuff »** → le simulateur s'ouvre avec ton équipement déjà chargé.
+**« Ouvrir dans WoWSims avec ce stuff »** → le simulateur s'ouvre **prêt à simuler** :
+ton équipement chargé, et les talents, la rotation et les consommables standards de ta spé
+déjà en place. Les emplacements que tu n'as pas choisis gardent un stuff de base cohérent.
 
 **Pour garder tes talents et réglages** : règle une fois ton personnage dans WoWSims
 (talents, conso, buffs, cible…), fais `Export` → `Link` → `Copy` et colle le lien dans le

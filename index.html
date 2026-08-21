@@ -932,6 +932,40 @@ function zlibBrut(octets) {
   return new Uint8Array(out);
 }
 
+/* Gabarits complets par simulateur : l'export « Link » PAR DEFAUT de chaque
+   page WoWSims (talents standards, rotation, consommables, buffs, cible 73),
+   releve sur un chargement vierge. Le bouton part de ce gabarit — ou du profil
+   personnel du raideur s'il en a memorise un — et n'y remplace que
+   l'equipement (et la race, pour le gabarit). Stockes compresses (~18 Ko),
+   gonfles en tache de fond au chargement. */
+const TPL_SPEC_ZL = {
+  "druid/balance": "eNqr4OPi4mAUYFJg0mCyYHSS4GCUYFJg1GAKYIxgTGDMYKpgbGBk7GBkEuIHirCAeQsYGVcwMklt4t7AzDeLmS0gJ7EytYiDTYBbah0jFz/HzDeMErvEldh+72Zc083ExcKx/xVIeDZQeBlQ+MduRqAMFzvH3weMEntFuIQ4pgNlnooocd7bzQhBQMl7LxklbokAGTOAkj/FuHg4rr1ihGsW4ji2l1FijyiyHhaOz69AOi8Cjf0gBmR8ewJmsHDsegqSXXwDJLvkFaPEexEuBqBA819GJVGODZsYBc5uYtTovMFo8C0pYNERxgQWrQ0sEnxcF5gYRgFVgdANxuHqNaurLMBERQAKjaar0XRFGnBi52BUYDJYwJbEJsXCxcTFsItJ1tTQwMDIyNjQyNTA2NDY1AhEGOrqmhoZGBgbn2BivsDEfYuJ4RETkwTjC6aURmaISSYOXcwMSmeZPfg4wfyGNAdBiIyIg+SsmSBw0t4SInLBXjENDK7ZB549AwJ37B0hjDf2Rp3MBas+M1ZxByVmpiiEJBalp5YoeEqwaw22hF3iQF3zvPGbx7oPRV5BI9yRUhvB0dHQctZhJjSBP7CHmemQAKyVGQFt5pCh",
+  "druid/feralbear": "eNrtV29sU1UU77nvrbs7jO7tUsfbHWhpsjBKJq+tVawk7eYUjFEm+MH4SRI6mMIg6zCIX2oIyogoE8SM4B+mooJBMiEZGzGoIU6BZMyodE6FmiWYgIKTSQiI9723/gG6q0ZjjOG0H349v/M7995z7rvvdqULXRQ0ooOHVBEDZkKtn4JOPFAPi8lyshISAGuBtMGRw6adirSDw7TzbdEugF6APoAw0YCVUfKQugGgC8gBIMeAbCBwHAhfPXm34tqiOOuXLHgi1kyd2jj+OmAJ/eoC6D0Tvc4TPdB+CVClB4dMdyIJ+g7hvtQD4ouF9Pgg6GcIMprsBX3I7S0SAvuLxbQzBXrS7VVOWKFrToO+1y1SdafMn10joB+cKECPiLpYJkDvEOhnTfDzGQuoNPGNOfTWbjN++HvQf3SjQzhe2QveSvphJ+jvdYInMbtq4zEwku9CFOZA/RvPksWwXFQFXgPw7VZ1F/YRx3X7R40dg//r0sJfqGKT/cGHXd9X1/fVX7NaKk5uqCIzYYeicoKObnJTdcgIGsGAPxgIBgJ+IxQ0/IGQv9oICb/AvUTtI8oAcaRIR6muIEMnV5HopV6KTlSr/UYcJ2AhL0CFdtybx3m6KutkIR7Eyb4K6mQk7OATLjg1dNUuWbZs4ZIV8RZPS+PSGGeo0dYyz+W0QRWwG/kk1HyuUZlIhsSIp6AQC+qaVyyNs3I+EV3eYsRO4TPnocPohFg9vx9nsTAq68CB473jsKgDRAL6cSvB0k5wMaIVoJOO9EOVU4dc11nhKtAhBeNx3F1NixqbYrHmxqZFbDKvEG8LLLuzLuyZ29AQa4o3Ph7zPCi4x2ItcebnM5D5NKoyZQAcXMwRlVuMyoykLnaNxFxeHom5UPprP7CpvBIrWPk1MUGj0lqXGaiJd8+fC1zfCayGR/A2FsKbU8r0PPUW7c3bHDuJ1f7cnjSP9iRkcNFq+ks/eIAhp3y00KyCl2PJgLPYqqxqVlY0yCRXfw5sGp9q7QmVlXRDcW7x7ay3xjOhV+UZyeQRiE3n067NY/U1k4emPWwer8e7eR0WexFpwExx9BmCk3ycKqzkI0iPIJz2VkIIYZnPLZLTR0ej7axBe3bid2bF5/rBN//KPTNKaRu7gRVx68HQNs/PuPfty9RL69qXDdn1cMa9tQ18vvR+T4+06UXCbuATeKm4Fgmc00TfYOGYOzTMZ9qNd13ZeKZq29+B/E+lOQVByrQ73pdoBSnTtn4t0QpSpn1qj0QrSJn2kyGJVpAy7fM7ydhaQcq04lI5tlaQMm1SVqukvFYH9ku0gmSzeBiNlFKdRzuyOf96PdYjaNKykd9aK6mWIGXaQ7IuHZJ36ehnEq0gZdq+kxKtIGXa5y5LtIJksyiMrX5Bphak7yKM+TZJnxiJPdlDZfBUFg8ns3jzb1ks0mawWdQ0btuZOdq0M99m/Vt/yuI3c/C5S1m8fW1W+3YOHl6XxS/vz8mZg1/NwdtycMd+COhXF4bZL6D4SXIBzhNYp8wosm48xrZo6ZZ205KRKUHLhiPTnnTvmn1i1aaI7vTbF6O+iPeIMsdlaxIN0VLb7Y6W2+JPI7enA6c0WPZl5AH7/+5gpCb9xzfQqiz/4WlY5bpvwaKWxeLkX7isyRMIee7Rie+/dk9vif6rwxV8cMV48QXzav5uSqsjiTWHo+1wx3dz17/UNBBJ54w+Ar8D8F4ASA==",
+  "druid/feralcat": "eNqr4OPi4WAUYJJgVGDSYLJgdNLiYJRgUmAMYIxgzGAqYKpgbGBk7GBkmsh49gwIvLGfycgAAg8mOAiJcTBFsExgZNzByHSAkekGI9MEJsYHjExSa3g2MPPNYmYLyEmsTC3iYBPgltrByMXGMdNRYrc4FwvH/seMXPwcax4zSqwSV2K7s5sRiLjYORoeMEp8YOIS4lgBlHkqosQJkYFI7nvCKHFdBKjt1j1GiRYRuDYejnMPGOE8IY6jQEOOiCPr5edovM8o8VsMyabvQEUfxYCMTx/ADBaOptuMQPL4U5DsJ6DydyJcDECBc08ZlRQ5tm1ilFi/iVHh8C9GjQk3GA2+JTkwejAGLOlhSmDMYCxg1NrAIsHHdYGJYRRQFQjdYByuXrO6ygJMYASg0Gi6Gk1XpAEnNg5GUDmexSTFsItJXtfUwNjA2MjQ2MjYyMjQwNTYwNDI1FDXwBQoDmSfYGK5wMR8i4nhEVORBJNSHldOtVJSZklqeWpiWaqSVUlRaaqOUlFmgW9mnnN+blJ+QH5mXkmxkpWpDlgZFuHcxLz0nNSQoszkbJj+3ESgLBC7JaYWZaa6ZRZBTa59wfSLsYuZQeksswcfJ9j1DWkOghB/iDhIzpoJAiftLSEiF+wV08Dgmn0gpC66Y+8Iq5SMOpkLVn1mrOIOSsxMUQhJLEpPLVHwlGDXGmyZp8SBuuZ54zePdR+KvIJGuCOlNoKjo6HlrAO0IcDwwB5mpkMCsKnACABUBslz",
+  "hunter/dps": "eNrtVl1IFFEU3u/OtDtOsum2spP0MM3TtliMowPmy4w+GSFYCfropNdc8GeZZsWKSEFCDULfXKGeeigjEh/C2n4h6FeQwFpKQQMhVhEhyF6C7jgq1UMR+RDhN5fDnPOd8925zP3rCoq5AvKIBJlESRkqS5gHiciIkhrUowEtJEG60A30gQxh8pWLJSMFn4svQ+YEEIoIrLyeT2AC5BFIBmSQYA6kcDF3jAuOcP6aVus0tYVAHleYhrhLuL8IKR1R/C9mkfoKkRceZ93wQxa+XKD4Z9JgTQwIo1lIK0QMCWnGLISVnOllvJzF2/dgn32JkXdyFc5LvccyesMsnMniO4UbLOlJhGkPM34+rPhXPYYXbmZduzrn2qcLrr0yD9bVdVaxzLryJNxcH9NJsfKrBUpMuD0O6dY45IlxRC9moH4+Uda/BBNVaEECg8AwcA2v+0hsjJeC4hTxbWNLEcrgfx1a+TTPJttvntD2vNqeV3+GSkFY398HsFvMZ7uhP4+XAvs9dsW4S2Rd01SVNb1YV4s1rbSkmL0eUHVV15iv6s8IP0XIO+L7QC6w80HpgXj+rNJGWymto1YnVcodO0mLFCfeRms71kOlqlqkJE/R6mSrE9/IYH6F3Wi1b5Z0xhPUPu5YtlNttVs11G6k7Y5Srh5U9U2yI/ETp+nnPpKmHs4bwl5zgPMpk1xVMGfN72428z0mbO4ZSbl4bhzyIlPGvuY1vDGOesfZjFGxca5p/Vxi9BPO7DxmxZvkWss+SR35sBSI/WvrzTG3Vu/Ir/V2PPiBl6N1FX/b49rv6O6dNNfvEr45Y0PTbGC3DXwDY/LWoQ==",
+  "mage/dps": "eNqr4OPi4WAUYJJgVGDSYLJgdBLkYJRgUmDUYDJ8WCWyzv3hI3sh7giWCYxMMxgZVzAySrXwbGDmm8XMFpCTWJlaxMEpwCG1jZGLn2PKY0aJXeJKbGu6mTreM3KxcNx6ABKeDhReBhR+v5vx+jtGLnaOew8YJfaKAGVurGKUeCoClvkFlOHh+H2XUeKWiBIzUAAofR0o/VMMLA0S4OG4tooRzmPnmAY0d48oUN3Te4wSf4DqnrwDy7BwPH8CIn8+AJG7noLIjw9AOh4BLX4vAuReByt4/4BRSYRj+yZGieO3GRUO/2LU6LzBGLDoCKPWBhYJPq4LTAyjgKpA6AbjcPWa1VUWLgZCUGg0XY2mK9KAEzewaAYWzAY/uBwYFzGycbFwMXEw7mJSNzI1MDAwNTIGksYGhqYGxkDSyFRX18DUGCRjbAgSNzA8wcRygYn7FhPDIyY7CSYlKy6LaqXk/Lzi1KKy1OCSxKISJSsjAx24kGteipKVMVAgJRVYuPsmZuUXObsUK1kZGtS+YEppZIY4ysShi5lB6SyzBx8nmN+Q5iAIkRFxkJw1EwRO2ltCRC7YK6aBwTX7wLNnQOCOvSOE8cbeqJO5YNVnxiruoMTMFIWQxKL01BIFTwl2rcGWR0ocqGueN37zWPehyCtohDtSaiM4OhpazjrMhOaVB/YwMx0SGDsYGQET4auu",
+  "paladin/holy": "eNqr4ONismB0YhBikOrn2sDMN4uZLSAnsTK1iINRgElKiYuBEFTi4Xh9lFng2VFmjUvPmLU2sEjwcV1gYhgFVAVCNxiHq9esrrIQTmVCo+lqNF2RBpwYVjGySDEJMZxgYrnAxH6LieERE5ME4wumlEZmiAoXhy5maU4Qq6FlroPgrJkgcNNe8ewZEGBxUDrL7MEHlmdoSHMQhGgScZCEKDxpbwkRuWCvmAYG1+wDIVrv2DtCGG/sjTqZC1Z9ZqziDkrMTFEISSxKTy1R8JRg1xpsabnEgbrmeeM3j3UfiryCRrgjpTZaQmLyrMNMaJp+YA8z0yGBsYOR0YMTAIeZUX8=",
+  "paladin/protection": "eNqr4OPi42AUYJJgVGDSYDJgsmB00gfyGSWYFBg1mAIYM5gKmCoYGxgZOxiZJjKePQMCb+xnMjKAwI+JDjsYGa2YBBiFuCNYJjAyrmBkPMDIJDWFdwMz3yxmtoCcxMrUIpDxUvsZufg51r5mlNgursT2cDfjilOMXCwc21+BhPseM0qshwgDERc7x9OXjBL7RLiEOLqAMo9FlDghMhDJ5n+MEjdFgIw1QNN+inHxcEx4zQjXzMOxDih8VFyJGcTj5+j+wyjxRwzJ7Gag9AcxIOP7XTCDhWPXU5BTvj4AyfYDZd+KAE2Z+RDoJg6IKSwcvbcYlVQ5Dm5iFDi7iVGj8wajwbcki843jA6MHowBH28xZjAWAAOIcQEjo9YGFgk+rgtMDKOAqkDoBuNw9ZrVVRYuBkJQaDRdjaYr0oATBwcjpFjfxMgixcTFsItJRdfA1NjA1BCIDYDA0MTI1MgQyAcKG4GFjIHoBBPLBSbmW0ycgrNmgsBN+0dMXcAKQamVkauiWqmgKDO/KLMksyrVIz+nMjgjMzUnRcmqpKg0VUcpOT+vODW5KLEkMz8vKDEvW8nKTEeptDjVtSK/KDmzOBemLrG0KFHJSskltSwfpNQRxNUBmpyanFhc4liWmpeeWlSMbHStEMI1L5hSfjAxdjHrc4K9abDQAS6laAwGn+01q0XWuT+smmIvwWYICY0L9kpnmT34IHoa0hwEIcIiDpIQzSftLWEKFdPA4Jp9IKS+u2PvCKv4jDqZC162MVbx+Saml2SkFmWm5OcpGJkqeEowaQ22zFniQFfrWPeh2FecGORIqZHgGGloPeMwk9H6vn/v9Lxb9jAzHRIYAVCf7EY=",
+  "paladin/retribution": "eNqr4OPi42AUYJJgVGDSYDJgsmB00uVglGB6wMiowKjBFMCYwVTAVMHYwMjYwcg0kfHsGRB4Yz+TkQEEfkx0EBJTYIpgmcDIuIOR6QAj0w1GpglMjA8YmaSaeDYw881iZgvISaxMLQLZIbWVkYufY+JjRond4kpst3czzvzLyMXCcfIBSHgyUHgVUPjXbkagDBcPx+G9jBIfmJSYQTwhjn6g9FMRJc7bYGmQGD/H7weMEtdFlNi+QQTYOba8Z5RYwwrU+/oBI9iCb2DhjW8YJY6IAzUcuM8o8VAELAO0Bmj11Qcg8tMHEHn8KYic9xCko/ceo8RHES4GoMCda4xK0hzbNjEKHNvEqNF1g9HgW5JF5xtGB0YPxgzGAkatDSwSfFwXmBhGAVWB0A3G4eo1q6sswKRFAAqNpqvRdEUacOLgAJfiFoy7GFmkmLgYdjHJm+oamBobGRgCKSNjAwNTQyMDA2NjQyNTIAHknWBiucDEdIuJ4RGTswSTkj2XbbVSSiqwxPZNzMovcnYpVrIyNNRRKihKLSjNyQnOL3FWsiopKk3VUUosLUpUslIKTsxLLsksqXQEcWtfMKU0MkMcI+LQxcygdJbZg48TzG9IcxCEyUjOmgkCJ+0tISIX7BXTwOCafSCkhrlj7wiraow6mQtWfWas4g5KzExRCEksSk8tUfCUYNcabHmjxIG65nnjN491H4q8gka4I6U2gqOjoeWsA7R6Z3hgDzPTIQHYAGAEANFUtWg=",
+  "priest/dps": "eNqr4OPi4mAUYFJg0mCyYHQS42CUALIMH1aJrHN/+Mg+g6mA6QQjoxBvBEsFYwMj4wRGxhWMTFK3uDcw881iZgvISaxMLeLgFGCVusDIxc9x8TWjxC5xJbalpxg73jNysXCceg8SvgwUXgYUvrebEYi42DlWvGKU2CvCJcQxGyjzVESJEyIDkhTi+HKAUeD5fyhglLglAjThzQNGiZ9icBN4OK69YoTzhDimAM3bI4psDD/Hu1WMEn+AWq7dhlo6F2jXBzEg49FLMIOFY9JqJiC56ylI9hHQhg8iQO6NJyCHzwOaL86xfROjwKVNjBqdNxgNviVZdL5hDPi1nlFrA4sEH9cFJoZRQFUgdINxuHrN6ioLFwMhKDSarkbTFWnAiYWDUYHpECObFAsXkwTjLiYFUwMDI2MDA0NjXV1TA2MjUwNTQwMjEwNDA2Mgy8TU8AQT8wUm7ltMDI+YgBpeMKV8YEppZIaYZuPQxcygdJbZg48TzG9IcxCEyIg4SM6aCQIn7S0hIhfsFdPA4Jp94NkzIHDH3hHCeGNv1MlcsOozYxV3UGJmikJIYlF6aomCpwS71mBL3CUO1DXPG795rPtQ5BU0wh0ptREcHQ0tZx1mQhP5A3uYmQ4JjB2MjADzAqkL",
+  "rogue/dps": "eNqr4ONi0WCyYHTSkGBSYAxgjGBMYCxgqmBsYGTsYGSayHj2DAi8sZ/JyAACPyY6CIlyMCowRrDsYGQ6wMh0g5FpAhPjA0YmqRPcG5j5ZjGzBeQkVqYWcbAKsEjtY+Ti53j9m1Fit7gS28y/jOd+M3KxcLT8AQlv+8QosQooDBQDCbNzHP7DKPGBiUuIYwtQ5qmIEidE5gpQkofjCFByJ48S8zkwbxNQRYuIEvMhMG/Wa0YltjswlVuBckfEISr5Od4B9f0WU2I79Btq+ce/IPLrExA57yGI/PQWZPvRBiaJjyJAxjEIg4Xj70tGJXGObZsYJdZvYlTY94tR40IHk8Ef64hNVxi1NrBI8HFdYGIYBVQFQjcYh6vXrK6ycDEQgkKj6Wo0XZEGnNg4GEEF+CtGFi4mLoZdTMoGBqbGRgaGRqZGugZGxsYGpkYGQGBqYGhqAOQbGRqaGp5gYrnAxH6LieERE5ME4wumlEZmiGkiDl3MDEpnmT34OMH8hjQHQZiM5KyZIHDS3hIicsFeMQ0MrtkHQqqJO/aOsPrCqJO5YNVnxiruoMTMFIWQxKL01BIFTwl2rcGWuEscqGueN37zWPehyCtohDtSaiM4OhpazjpA62iGB/YwMx0SgLU4IwBEkqTb",
+  "shaman/elemental": "eNqr4OPi4mAUYFJg0mCyYHSS4mCUYFJg1GAKYIxgTGDMYCpgqmBsYGTsYGQSYpeAsKWucG9g5pvFzBaQk1iZWsTBJMAudZaRi5/j9SNGiV3iSmxruplu3GbkYuG49QAk/BYovAwo/Ocd4+8fjFzsHH8fMErsFeES4jj/jFHiqYgS573djNduMwJJLh6Oi0CxWyJKzL93g/S+ASr9KabEBuT1fAZJX3jGqMR2+x3jk3eMQAP6PjBK7BEFGwBUcfs2SMvTe4wSf4BaIGJA606/Z5T4IAZkXHwAZrBw7HoKct3HByDZR0DBtyJAxpUnjBL3RIDiN+4wKolybN/EKHB2E6NG5w1Gg29JAYuOMCawaG1gkeDjusDEMAqoCoRuMA5Xr1ldZeFiIASFRtPVaLoiDTixczAqMBksYPvEyCLExMWwi0nR1NTAwNjQwNTQwMDI0NjYFMTU1QXxTY0NgIKmJ5g4LjAx32JieMTEJMH4gimlkRlimIlDFzOD0llmDz5OML8hzUEQIiPiIDlrJgictLeEiFywV0wDg2v2gWfPgMAde0cI4429USdzwarPjFXcQYmZKQohiUXpqSUKnhLsWoMtbZc4UNc8b/zmse5DkVfQCHek1EZwdDS0nHWYCU3jD+xhZjokAOtrRgD7A5/i",
+  "shaman/enhancement": "eNqr4OPi4GAUYNJgsmB0MuRglGBSYNRgCmCMYExgzGAqYKpgbGBk7GBkmsh49gwIvLGfycgAAj8mOlxgZBTi5ABqKGB8wMgk9Z17AzPfLGa2gJzEytQiDnYBdqkzjFz8HB8eMUrsFldim/mX8fZuRi4WjqNPQcKfgcKrgMJAsV9AYR6Ow3sZJT4wKTGDFAlxnH7GKPFURIkTyIMgoIqzQLHrIhAV/BwvHjBKrGFVYvu2m/EbWPrMM0awcRADjgKlj4gjG8DP0XifUeK3GNxOFo5PH0Dk1Qcgct5DEHkc6Dh2jil3GSU+iiAYLBzLbzIqyXFs28QocGwTo0bXDUaDlk2MFp1vGB0YPRgTWDKAgaC1gUWCj+sCE8MooCoQusE4XL1mwGj1moWLAQ9k5/jwgVHirQgw9f69CWIose3YwghEXAxCo+ltNL2RBpxYOIDF+y9GLikOLiZQuS/BuItJ0cBY19TAwNTAyMgQSBoaGhubGhsamhqCRA1MjQ0MTzCxXGDiuMXE8IgJqOMFU0ojM8Q8EYcuZgals8wefJxgfkOagyBMRnLWTBA4aW8JEblgr5gGBtfsAyGVyR17R1itYtTJXLDqM2MVd1BiZopCSGJRemqJgqcEu9ZgS94lDtQ1zxu/eaz7UOQVNMIdKbURHB0NLWcdoDU5wwN7mJkOCcC6nhEAbFiw0A==",
+  "shaman/restoration": "eNqr4ONismB0YhBikHrGuYGZbxYzW0BOYmVqEQenALuUEhcDIajEwVEtUK1x6Rmz1gYWCT6uC0wMo4CqQOgG43D1mtVVFsIpTGg0XY2mK9KAE0MTE4sUExfDCSaWC0zst5gYHjExSTC+YErpYmZQOsvswccJVteQ5iAI0SHiIDlrJgictLeEiFywV0wDg2v2gWfPgMAde0cI4429USdzwarPjFXcQYmZKQohiUXpqSUKnhLsWoMtmZY4UNc8b/zmse5DkVfQCHek1EZwdDS0nHWYCU2uD+xhZjokMHYwMnpwAgDILEJJ",
+  "warlock/dps": "eNqr4OPi4mAUYFJg0mCyYHSy52CUYFJg1GAyfFglss794SN7C8YAxgjGBMYMpgKmCsYGRsYORqaJjGfPgMAb+5mMDCDwY6LDCUbGC4yMQkISjBEsYHUTGBkXMDKuYGSSusy9gZlvFjNbQE5iZWoRB7sAp9QeRi5+jsWPGCV2iSuxrelmurebkYuF49M9kPByoPAyoPDtd4y/fzBysXPce8AosVeES4hjCVDmqYgS55N3jH/eMYL08HDs2ssocUtEifn2bZDSFUAVP8WAwgf2MiqxAVX8BioS4jgGVLRHVIkTKHDtNlgjP8e7VYwSf8SU2IB29HwG2f7zAYi8CCYX3wCRu56CzGx6yCjxQQTI3QeWanzAqCTLsX0To8ClTYwanTcYDb4lWXS+YQxYdATk5xmMjFobWCT4uC4wMYwCqgKhG4zD1WtWV1m4GAhBodF0NZquSANOLByMCkyzmHi4gMU8B7MGowKjBfMuJhVdIwNTAwNjA0NjYyNDA0NdUxDXwNTQyAhEGpgaA/EJJpYLTNy3mBgeMTFJML5gSmlkhhhq4tDFzKB0ltmDjxPMb0hzEITIiDhIzpoJAiftLSEiF+wV08Dgmn0gpNK4Y+8Iqz2MOpkLVn1mrOIOSsxMUQhJLEpPLVHwlGDXGmxpvMSBuuZ54zePdR+KvIJGuCOlNoKjo6HlrAO0xmZ4YA8z0yEBWKczAgA3u6qv",
+  "warrior/dps": "eNqr4ONiE2DSYLJgdNKSYFJgDGCMYExgzGAqYKpgbGBk7GBkmsh49gwIvLGfycgAAj8mOgiJcADVRrAUMO5gZDrAyHSDkWkCE6PUIZ4NzHyzmNkCchIrU4s42AUYpTYycvFzrHjNKLFbXIlt5l/GS+8YuVg4jr0CCa8CCq8CCn97x3h7NyMXD8fhvYwSH5iUmEE8IY5lQOmnIkqcP94xdr1nPHUXpOLlK0aJ6yIQFewcy4Eq1rAChWe9ZlRiu36b8fRdkPBqoKIj4kBGI1D+txjQvrWvQLZefQAil60EkfMeglROv8co8VEEyGh6DWawcMwEmqTAsW0To8CxTYwaXTcYDVo2MVp0vmF0YPRgjOh9xpjBWMCotYFFgo/rAhPDKKAqELrBOFy9ZnWVhYuBEBQaTVej6Yo04MTGwQgqvVcxSXCJcYlwMAowS0JkPB0UfjFqMFow7mJSMjYxMDA1MDI0NjAyMNQFMk0NgAIgytAIRBianmBiucDEdIuJ4RFTrgSTUiZXerVScUFqspKVkktBcXhiUVFmflEwUMCttKhSSUeptDjVvyy1qCC/PLVIyaqkqDRVR6m4NC8ltcixKDcfKKQE0wMW9EjNKQDqSsrJz0/JKS0uCcnMzcxLV7IyrX3BlNLIDHGxpUMXM4PSWWYPPk4wvyHNQRAiI+IgOWsmCJy0t4SIXLBXTAODa/aBkPrpjr0jrKIy6mQuWPWZsYo7KDEzRSEksSg9tUTBU4Jda7BlrRIH6prnjd881n0o8goa4Y6U2giOjoaWsw7QxgHDA3uYmQ4JwOYDIwAoXcaO",
+  "warrior/protection": "eNrtVUtoE1EUzbkTk5chxDSGdtpVOiCkheKbDAOxLmbaTetCrK5010BbI0gNtYtaN0FQWqHYoiAJLqwfkCJaAkKxIHUhVGkhm0pSBY0/7Aepn0VRQd9kiOBKRBGRnIE7M/fccy4z8+bdoYAsB0lBlDjiaNcUiqAL3UhSioaQBkZAE1hcsLFuZuCysTlhzQDzQB5opSBC26KUwgxoDlQAjROegRou+qelQFbydB1JHO8dYN4gGuYgb2VX1qDM1qme6w9xdpxkH5s6SapUmrW5a4K7LThxZye8bGoVygbJITYpmFdh1ecwNulnuTQpxbCj9bLPK0IbFunsGr47+NlVIbxfp0pLb+2ijJB8qZXd7P0GRHzx0o7Fx3YcuUyiYFU0fGe7ZEpQbjHH3Mc+fkX5Um1i93KCyCGS7oieK4AXbyA+ug4LnTgw9hpJpMQ7wyWgedqtBOQ8uar4owgV8L8+WuuSW3b97AhV11V1Xf0a2hmDvcfHkSNFrpXDjIJU73AHrcgnRMXmf4e26wbnXOeazmMtXG/h3DAMTeO6zrk4aYZgDG2e3HmiZXI9JzE43lDPJuGMtMNXduOTVk02Y6NoNuplfDCbToRvdpSGz5uKR3Oa5k11UeoMOJp0n1XjpMNWvSN+YO6sFDb2lfHI3OdMoSdmW2UcxUal1MppDAf2JA4NJnsHDvcc7Y/EjMhuhZr/tf9j0Pqr7bbc/aHfscT+tt+1LH+R9KkFK4NdT/eOXehfNiueVje+AUw0ut4="
+};
+const TPL_SPEC = {};
+if (typeof DecompressionStream !== "undefined")
+  Object.entries(TPL_SPEC_ZL).forEach(([chemin, b64]) => {
+    const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("deflate")))
+      .arrayBuffer()
+      .then(buf => { TPL_SPEC[chemin] = new Uint8Array(buf); })
+      .catch(() => {});
+  });
+
 /* Gabarit minimal releve sur un export « Link » reel du simulateur : la racine
    (buffs, rencontre, version des donnees) et le tronc du joueur (niveau,
    consommables vides, nom). Sans eux, l'import du fragment PLANTE en silence
@@ -946,14 +980,16 @@ function zlibBrut(octets) {
 const TPL_ROOT = Uint8Array.from(atob("eA4KAEIAEgAizQNIDgkAAAAAAIBmQBEAAAAAAAAUQBmamZmZmZnJPzkAAAAAAADQPyFmZmZmZmbWP1HNzMzMzMzcP0HNzMzMzMzsPzKJA3Cq8wF6C1JhaWQgVGFyZ2V0IEkYByrQAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFvkAAAAAAAAAAAAAAAAAgKFdBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADkAAAAAgITNQJkBAAAAAAAA4D9BAAAAAAAAAEBgAYgBAQ=="), c => c.charCodeAt(0));
 const TPL_PLAYER = Uint8Array.from(atob("sAMOmgMGUGxheWVyIgBCAPIBBBICCgDaAgDiAgIYAYoDAA=="), c => c.charCodeAt(0));
 
-function lienWowsims(base, race, ids, profil) {
+function lienWowsims(base, chemin, race, ids, profil) {
   /* Profil memorise : on reconstruit l'export du raideur octet par octet en ne
      touchant qu'a l'equipement du joueur. Talents, consommables, buffs,
      rotation et cible restent les siens ; une piece identique garde ses gemmes
      et son enchantement ; un emplacement laisse vide garde sa piece actuelle. */
-  if (profil) {
+  const gabarit = profil ? Uint8Array.from(atob(profil), c => c.charCodeAt(0))
+                         : TPL_SPEC[chemin];
+  if (gabarit) {
     try {
-      const octets = Uint8Array.from(atob(profil), c => c.charCodeAt(0));
+      const octets = gabarit;
       const equipement = leurs => {
         const eq = [];
         ids.forEach((id, i) => {
@@ -978,6 +1014,10 @@ function lienWowsims(base, race, ids, profil) {
         joueur.forEach(ps => {
           if (ps.champ === 3 && ps.wt === 2) {
             if (!fait) { js.push(...pbMsg(3, equipement(leurs))); fait = true; }
+          } else if (!profil && ps.champ === 1 && ps.wt === 0 && SIM_RACE[race]) {
+            /* gabarit de spe : la race choisie remplace celle par defaut ;
+               un profil personnel garde la sienne. */
+            js.push(...pbNum(1, SIM_RACE[race]));
           } else js.push(...pbSeg(ps));
         });
         if (!fait) js.push(...pbMsg(3, equipement([])));
@@ -1141,7 +1181,7 @@ function renderGear() {
   $("#gearVide").hidden = !!mien.profil;
   $("#simProfilEtat").textContent = mien.profil
     ? "Réglages personnels mémorisés ✓ — le bouton ouvre ta simulation ; les emplacements vides gardent tes pièces actuelles."
-    : "Aucun réglage mémorisé pour cette classe : le lien ouvre un simulateur neuf (talents et conso à régler sur place).";
+    : "Aucun réglage mémorisé : le lien ouvre un simulateur pré-réglé (talents, rotation et consommables standards de la spé).";
 
   /* Migration : un jeton memorise avant la conversion automatique devient sa
      piece T6 quand le choix est sans ambiguite, sinon l'emplacement se vide. */
@@ -1244,7 +1284,8 @@ function renderGear() {
     {character: {gameClass: CLASSE_EN[cl], race: mien.race}, items}, null, 1);
 
   const spe = state.spe && state.spe.startsWith(cl) ? state.spe : cl;
-  const base = "https://www.wowsims.com/tbc/" + (SIMS[spe] || SIMS[cl] || "") + "/";
+  const chemin = SIMS[spe] || SIMS[cl] || "";
+  const base = "https://www.wowsims.com/tbc/" + chemin + "/";
   /* Le lien porte l'équipement : un clic, pas de copier-coller. */
   const positions = SLOTS.map(([nom], i) => {
     const id = mien.slots[i];
@@ -1252,7 +1293,7 @@ function renderGear() {
     const d = DATA.find(x => x.id === id);
     return (d && d.cat === "Jeton") ? 0 : Number(id);
   });
-  $("#simLink").href = lienWowsims(base, mien.race, positions, mien.profil);
+  $("#simLink").href = lienWowsims(base, chemin, mien.race, positions, mien.profil);
   $("#gearCount").innerHTML = `<b>${pris}</b> pièce${pris > 1 ? "s" : ""} sur ${SLOTS.length} emplacements`;
 
   const warn = $("#gearWarn");
