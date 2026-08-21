@@ -1538,14 +1538,30 @@ function srRendu(reserves) {
     } else if (rang === 1) {
       const ex = d.paliers[0].length > 1 ? " (ex æquo)" : "";
       cats.ok.push(`${qui} — ${nom} : 1re priorité${ex}, SR cohérente`);
-    } else if (rang > 1) {
-      const devant = d.paliers.slice(0, rang - 1).flat();
-      const msg = `${qui} — ${nom} : rang ${rang}, la prio passe d'abord par ` +
-        devant.map(c => `<span style="color:var(${KEY(c)})">${esc(c)}</span>`).join(", ") +
-        ` <span class="sub">(${esc(d.niveau)})</span>`;
-      (d.niveau === "Obligatoire" || d.niveau === "Importante" ? cats.ko : cats.warn).push(msg);
+    } else if (!d.elig.includes(r.classe)) {
+      cats.ko.push(`${qui} — ${nom} : classe non éligible à l'objet`);
     } else {
-      cats.ko.push(`${qui} — ${nom} : la prio réserve l'objet à d'autres classes — ${srChaine(d)}`);
+      /* La prio « peut aller au suivant » : une SR de rang 2+ (ou hors chaîne)
+         n'est bloquante que si un joueur MIEUX CLASSÉ a aussi SR l'objet. */
+      const rangDe = cl => { const i = d.paliers.findIndex(p => p.includes(cl)); return i < 0 ? 99 : i + 1; };
+      const monRang = rang || 99;
+      const devant = parObjet[r.id].filter(x => x !== r && x.classe && rangDe(x.classe) < monRang);
+      const devantTxt = devant.map(x => `<b>${esc(x.joueur)}</b> ` +
+        `<span style="color:var(${KEY(x.classe)})">${esc(x.classe)}</span> (rang ${rangDe(x.classe)})`).join(", ");
+      if (rang > 1) {
+        if (devant.length) {
+          const msg = `${qui} — ${nom} : rang ${rang}, bloquée par la SR de ${devantTxt} ` +
+            `<span class="sub">(${esc(d.niveau)})</span>`;
+          (d.niveau === "Obligatoire" || d.niveau === "Importante" ? cats.ko : cats.warn).push(msg);
+        } else {
+          cats.ok.push(`${qui} — ${nom} : rang ${rang}, mais aucune SR mieux classée — la prio peut lui revenir`);
+        }
+      } else if (devant.length) {
+        cats.ko.push(`${qui} — ${nom} : hors chaîne de prio, et ${devantTxt} l'a aussi SR — ${srChaine(d)}`);
+      } else {
+        cats.warn.push(`${qui} — ${nom} : hors chaîne de prio (${srChaine(d)}) — ` +
+          `aucune classe nommée ne l'a SR, passera sans doute MS &gt; OS`);
+      }
     }
   });
   const contestes = Object.entries(parObjet)
