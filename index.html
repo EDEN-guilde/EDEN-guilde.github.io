@@ -208,6 +208,10 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
 .warn{margin-top:14px; padding:10px 12px; border-left:2px solid var(--import);
   background:rgba(224,163,46,.07); font-size:12.5px; color:var(--ink-dim)}
 
+.profil{display:grid; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft)}
+.profil textarea{background:var(--surface-2); color:var(--ink); border:1px solid var(--line);
+  border-radius:var(--r); padding:8px 10px; font-size:12px; font-family:inherit; resize:vertical}
+
 /* ---------- tooltip Wowhead ---------- */
 #tip{position:fixed; z-index:50; display:none; max-width:340px; pointer-events:none;
   background:#0B0A07; border:1px solid var(--line); border-radius:var(--r); padding:10px 12px;
@@ -317,9 +321,25 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
         simulateur garde en mémoire un réglage cassé (laissé par une ancienne version de ce lien) :
         dans WoWSims, clique la roue dentée <b>⚙️</b> en haut à droite →
         <b>Restore Defaults</b>, recharge la page, puis réimporte. À faire une seule fois.</p>
-      <p class="warn">L'import <b>remplace</b> tout l'équipement du simulateur : les emplacements
+      <p class="warn" id="gearVide">L'import <b>remplace</b> tout l'équipement du simulateur : les emplacements
         laissés vides ici arrivent vides là-bas. Complète-les dans WoWSims avant de simuler,
         sinon le résultat ne veut rien dire.</p>
+
+      <div class="profil">
+        <p class="sub" style="margin:0"><b>Garder tes talents et réglages.</b> Dans WoWSims,
+          règle une fois ton personnage (talents, conso, buffs, cible…), puis
+          <code>Export</code> → <code>Link</code> → <code>Copy</code> et colle le lien ici.
+          Le bouton ouvrira ensuite <i>ta</i> simulation avec le stuff choisi : gemmes et
+          enchantements gardés sur les pièces inchangées, et les emplacements vides gardent
+          tes pièces actuelles. À refaire seulement quand tu changes tes réglages.</p>
+        <textarea id="simProfil" rows="2" spellcheck="false"
+          placeholder="https://www.wowsims.com/tbc/…#…" aria-label="Lien d'export WoWSims"></textarea>
+        <div class="gear-head" style="margin:0">
+          <button class="btn ghost" id="simProfilBtn" type="button">Mémoriser mes réglages</button>
+          <button class="reset" id="simProfilOubli" type="button" hidden>Oublier</button>
+        </div>
+        <p class="sub" id="simProfilEtat" style="margin:0"></p>
+      </div>
       <textarea id="gearJson" readonly aria-label="JSON à importer dans WoWSims"></textarea>
       <p class="warn" id="gearWarn" hidden></p>
     </div>
@@ -710,6 +730,18 @@ function badges(d) {
   return out;
 }
 
+/* Jeton survole avec une classe choisie : le tooltip montre la piece T6 de
+   la classe — celle du role de la spe quand il y a plusieurs variantes —
+   plutot que le jeton lui-meme, qui n'a aucune stat. */
+function tipT6(d) {
+  if (d.cat !== "Jeton" || !state.cls || !T6[d.id] || !T6[d.id][state.cls]) return "";
+  const spe = state.spe && state.spe.startsWith(state.cls + " ") ? state.spe : "";
+  const attendu = spe ? ROLE_SPE[spe] : ROLE_CLASSE[state.cls];
+  const v = T6[d.id][state.cls];
+  const choix = (attendu && v.find(x => x[3] === attendu)) || v[0];
+  return ` data-tip="${choix[0]}"`;
+}
+
 function rowEl(d) {
   const el = document.createElement("article");
   el.className = "row n-" + d.niveau.normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -746,7 +778,7 @@ function rowEl(d) {
     <span class="stripe"></span>
     ${rank}
     <div class="body">
-      <a class="name" href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">${esc(nameOf(d))}</a>${badges(d)}
+      <a class="name" href="${esc(d.link)}"${tipT6(d)} target="_blank" rel="noopener noreferrer">${esc(nameOf(d))}</a>${badges(d)}
       <div class="meta"><span>${esc(d.slot)}</span><span>${esc(d.sub)}</span><span>${esc(d.cat)}</span></div>
       <div class="chain">${chain}</div>
       ${noteOf(d) ? `<p class="note">${esc(noteOf(d))}</p>` : ""}
@@ -814,6 +846,41 @@ const pbCle = (num, type) => pbVarint((num << 3) | type);
 const pbMsg = (num, octets) => [...pbCle(num, 2), ...pbVarint(octets.length), ...octets];
 const pbNum = (num, val) => [...pbCle(num, 0), ...pbVarint(val)];
 
+/* Lecture d'un message protobuf en segments, sans schema : il suffit de
+   savoir decouper pour operer l'equipement et recopier le reste tel quel. */
+function pbLire(b) {
+  const segs = [];
+  let i = 0;
+  const varint = () => {
+    let v = 0, m = 1;
+    for (;;) { const o = b[i++]; v += (o & 127) * m; if (!(o & 128)) return v; m *= 128; }
+  };
+  while (i < b.length) {
+    const cle = varint(), champ = cle >> 3, wt = cle & 7;
+    let contenu;
+    if (wt === 0) { const d0 = i; varint(); contenu = b.slice(d0, i); }
+    else if (wt === 1) { contenu = b.slice(i, i + 8); i += 8; }
+    else if (wt === 5) { contenu = b.slice(i, i + 4); i += 4; }
+    else if (wt === 2) { const ln = varint(); contenu = b.slice(i, i + ln); i += ln; }
+    else throw new Error("wt " + wt);
+    segs.push({champ, wt, contenu});
+  }
+  return segs;
+}
+const pbSeg = g => g.wt === 2 ? pbMsg(g.champ, g.contenu) : [...pbCle(g.champ, g.wt), ...g.contenu];
+const idDeSpec = spec => {
+  const f = pbLire(spec).find(x => x.champ === 1 && x.wt === 0);
+  if (!f) return 0;
+  let v = 0, m = 1;
+  for (const o of f.contenu) { v += (o & 127) * m; m *= 128; }
+  return v;
+};
+const enB64 = o => {
+  let t = "";
+  for (let i = 0; i < o.length; i += 8192) t += String.fromCharCode(...o.subarray(i, i + 8192));
+  return btoa(t);
+};
+
 /* Enveloppe zlib sans compression : le format attendu par WoWSims accepte les
    blocs « stored », et cela evite CompressionStream, qui est asynchrone — le
    lien serait alors pret trop tard si le raideur clique aussitot. */
@@ -848,7 +915,48 @@ function zlibBrut(octets) {
 const TPL_ROOT = Uint8Array.from(atob("eA4KAEIAEgAizQNIDgkAAAAAAIBmQBEAAAAAAAAUQBmamZmZmZnJPzkAAAAAAADQPyFmZmZmZmbWP1HNzMzMzMzcP0HNzMzMzMzsPzKJA3Cq8wF6C1JhaWQgVGFyZ2V0IEkYByrQAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFvkAAAAAAAAAAAAAAAAAgKFdBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADkAAAAAgITNQJkBAAAAAAAA4D9BAAAAAAAAAEBgAYgBAQ=="), c => c.charCodeAt(0));
 const TPL_PLAYER = Uint8Array.from(atob("sAMOmgMGUGxheWVyIgBCAPIBBBICCgDaAgDiAgIYAYoDAA=="), c => c.charCodeAt(0));
 
-function lienWowsims(base, race, ids) {
+function lienWowsims(base, race, ids, profil) {
+  /* Profil memorise : on reconstruit l'export du raideur octet par octet en ne
+     touchant qu'a l'equipement du joueur. Talents, consommables, buffs,
+     rotation et cible restent les siens ; une piece identique garde ses gemmes
+     et son enchantement ; un emplacement laisse vide garde sa piece actuelle. */
+  if (profil) {
+    try {
+      const octets = Uint8Array.from(atob(profil), c => c.charCodeAt(0));
+      const equipement = leurs => {
+        const eq = [];
+        ids.forEach((id, i) => {
+          const leur = leurs[i];
+          if (!id) { eq.push(...pbMsg(1, leur || [])); return; }
+          eq.push(...pbMsg(1, leur && idDeSpec(leur) === Number(id) ? leur
+                                                                   : pbNum(1, Number(id))));
+        });
+        return eq;
+      };
+      const sortie = [];
+      pbLire(octets).forEach(seg => {
+        if (seg.champ !== 3 || seg.wt !== 2) { sortie.push(...pbSeg(seg)); return; }
+        const joueur = pbLire(seg.contenu);
+        let leurs = [];
+        joueur.forEach(ps => {
+          if (ps.champ === 3 && ps.wt === 2)
+            leurs = pbLire(ps.contenu).filter(x => x.champ === 1 && x.wt === 2).map(x => x.contenu);
+        });
+        const js = [];
+        let fait = false;
+        joueur.forEach(ps => {
+          if (ps.champ === 3 && ps.wt === 2) {
+            if (!fait) { js.push(...pbMsg(3, equipement(leurs))); fait = true; }
+          } else js.push(...pbSeg(ps));
+        });
+        if (!fait) js.push(...pbMsg(3, equipement([])));
+        sortie.push(...pbMsg(3, js));
+      });
+      const buf = zlibBrut(new Uint8Array(sortie));
+      return base + "#" + enB64(buf);
+    } catch (e) { /* export illisible : on retombe sur le gabarit neutre */ }
+  }
+
   const items = [];
   /* ItemSpec.id est le champ 1 sur le build en ligne de WoWSims — verifie en
      decodant un export du simulateur lui-meme, le depot public etant plus recent. */
@@ -988,6 +1096,12 @@ function renderGear() {
   selRole.value = mien.role;
   selRole.onchange = e => { mien.role = e.target.value; saveGear(); renderGear(); };
 
+  $("#simProfilOubli").hidden = !mien.profil;
+  $("#gearVide").hidden = !!mien.profil;
+  $("#simProfilEtat").textContent = mien.profil
+    ? "Réglages personnels mémorisés ✓ — le bouton ouvre ta simulation ; les emplacements vides gardent tes pièces actuelles."
+    : "Aucun réglage mémorisé pour cette classe : le lien ouvre un simulateur neuf (talents et conso à régler sur place).";
+
   /* Migration : un jeton memorise avant la conversion automatique devient sa
      piece T6 quand le choix est sans ambiguite, sinon l'emplacement se vide. */
   Object.keys(mien.slots).forEach(i => {
@@ -1081,7 +1195,7 @@ function renderGear() {
     const d = DATA.find(x => x.id === id);
     return (d && d.cat === "Jeton") ? 0 : Number(id);
   });
-  $("#simLink").href = lienWowsims(base, mien.race, positions);
+  $("#simLink").href = lienWowsims(base, mien.race, positions, mien.profil);
   $("#gearCount").innerHTML = `<b>${pris}</b> pièce${pris > 1 ? "s" : ""} sur ${SLOTS.length} emplacements`;
 
   const warn = $("#gearWarn");
@@ -1113,6 +1227,25 @@ $("#gearFromWish").onclick = () => {
 $("#simLink").addEventListener("click", () => {
   try { navigator.clipboard.writeText($("#gearJson").value); } catch (e) {}
 });
+
+$("#simProfilBtn").onclick = async () => {
+  const etat = $("#simProfilEtat");
+  const m = $("#simProfil").value.trim().match(/#([A-Za-z0-9+/=]+)\s*$/);
+  if (!m) { etat.textContent = "Lien non reconnu : il faut l'adresse complète donnée par Export → Link."; return; }
+  try {
+    const bin = Uint8Array.from(atob(m[1]), c => c.charCodeAt(0));
+    const flux = new Blob([bin]).stream().pipeThrough(new DecompressionStream("deflate"));
+    const octets = new Uint8Array(await new Response(flux).arrayBuffer());
+    if (!pbLire(octets).some(g => g.champ === 3 && g.wt === 2)) throw new Error("pas de joueur");
+    monGear().profil = enB64(octets);
+    $("#simProfil").value = "";
+    saveGear();
+    renderGear();
+  } catch (e) {
+    etat.textContent = "Ce lien n'a pas pu être lu — recopie-le tel quel depuis Export → Link → Copy.";
+  }
+};
+$("#simProfilOubli").onclick = () => { delete monGear().profil; saveGear(); renderGear(); };
 
 $("#copyJson").onclick = async () => {
   const zone = $("#gearJson");
@@ -1150,7 +1283,8 @@ function tipHide() {
   tipEl.innerHTML = "";
 }
 async function tipShow(a, x, y) {
-  const id = (a.getAttribute("href") || "").match(/item=(\d+)/);
+  const id = a.dataset.tip ? [null, a.dataset.tip]
+           : (a.getAttribute("href") || "").match(/item=(\d+)/);
   if (!id) return;
   const token = ++tipToken;
   const key = id[1] + ":" + state.lang;

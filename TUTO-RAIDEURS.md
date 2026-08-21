@@ -49,6 +49,12 @@ Compose ton set avec le butin des deux raids. Les emplacements se remplissent to
 
 **« Ouvrir dans WoWSims avec ce stuff »** → le simulateur s'ouvre avec ton équipement déjà chargé.
 
+**Pour garder tes talents et réglages** : règle une fois ton personnage dans WoWSims
+(talents, conso, buffs, cible…), fais `Export` → `Link` → `Copy` et colle le lien dans le
+champ prévu sous le bouton. À partir de là, le bouton ouvre **ta** simulation : gemmes et
+enchantements gardés sur les pièces inchangées, et les emplacements laissés vides gardent
+tes pièces actuelles. À refaire seulement quand tu changes tes réglages.
+
 ⚠️ L'import **remplace tout** dans le simulateur : les emplacements que tu n'as pas remplis ici
 arrivent vides là-bas. Complète-les dans WoWSims avant de simuler, sinon le DPS affiché ne veut
 rien dire.
