@@ -245,9 +245,10 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
 .warn{margin-top:14px; padding:10px 12px; border-left:2px solid var(--import);
   background:rgba(224,163,46,.07); font-size:12.5px; color:var(--ink-dim)}
 
-.srCtrl{margin-top:36px; border-top:1px solid var(--line); padding-top:14px}
-.srCtrl summary{cursor:pointer; color:var(--ink-dim); font-size:14px; user-select:none}
-.srCtrl summary:hover{color:var(--ink)}
+.srCtrl{padding-top:16px}
+.srTitre{margin:0; font-family:"Cinzel",Georgia,serif; font-size:18px; font-weight:600}
+.srTitre .sub{font-family:"Barlow",sans-serif; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; margin-left:8px}
 .srCtrl textarea{width:100%; height:92px; margin-top:10px; padding:10px; resize:vertical;
   background:var(--surface-2); color:var(--ink); border:1px solid var(--line);
   border-radius:var(--r); font-size:12px; font-family:inherit}
@@ -296,6 +297,7 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
   <nav class="views" role="tablist">
     <button type="button" id="viewPrio" role="tab">Priorités de loot</button>
     <button type="button" id="viewGear" role="tab">Mon stuff</button>
+    <button type="button" id="viewSR" role="tab">Contrôle SR</button>
   </nav>
 
   <div class="sepGlaive" aria-hidden="true">
@@ -408,8 +410,8 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
     </div>
   </section>
 
-  <details class="srCtrl" id="srCtrl">
-    <summary>Contrôle des Soft Reserves (officiers)</summary>
+  <section class="srCtrl" id="srPanel" hidden>
+    <h2 class="srTitre">Contrôle des Soft Reserves <span class="sub">officiers</span></h2>
     <p class="sub" style="margin-top:10px">Colle l'export de <b>softres.it</b> : la chaîne
       « <b>Gargul export</b> » (la même que celle importée dans Gargul) ou le CSV
       (<code>ItemId,Name,Class,…</code>). L'analyse compare chaque réserve aux listes de
@@ -421,7 +423,7 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
       <span class="sub" id="srEtat"></span>
     </div>
     <div id="srOut"></div>
-  </details>
+  </section>
 
   <footer>
     Priorités reprises telles quelles du Google Sheet de la guilde ; les classes affichées sont déduites
@@ -704,14 +706,17 @@ const rankOf = tierOf;
 function render() {
   /* habillage par raid filtré : bandeau + accents (voir CSS body[data-art]) */
   document.body.dataset.art = state.raid === "Hyjal" ? "hyjal" : (state.raid ? "bt" : "");
-  const gearVue = state.view === "gear";
-  $("#viewPrio").setAttribute("aria-pressed", !gearVue);
-  $("#viewGear").setAttribute("aria-pressed", gearVue);
-  $("#filters").hidden = gearVue;
-  document.querySelector(".tally").hidden = gearVue;
-  $("#list").hidden = gearVue;
-  $("#gear").hidden = !gearVue;
-  if (gearVue) { renderGear(); save(); return; }
+  const vue = state.view === "gear" ? "gear" : state.view === "sr" ? "sr" : "prio";
+  $("#viewPrio").setAttribute("aria-pressed", vue === "prio");
+  $("#viewGear").setAttribute("aria-pressed", vue === "gear");
+  $("#viewSR").setAttribute("aria-pressed", vue === "sr");
+  $("#filters").hidden = vue !== "prio";
+  document.querySelector(".tally").hidden = vue !== "prio";
+  $("#list").hidden = vue !== "prio";
+  $("#gear").hidden = vue !== "gear";
+  $("#srPanel").hidden = vue !== "sr";
+  if (vue === "sr") { save(); return; }
+  if (vue === "gear") { renderGear(); save(); return; }
 
   /* refléter l'état dans les contrôles */
   [...clsBox.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.cls === state.cls));
@@ -1409,6 +1414,7 @@ function renderGear() {
 
 $("#viewPrio").onclick = () => { state.view = "prio"; render(); };
 $("#viewGear").onclick = () => { state.view = "gear"; render(); };
+$("#viewSR").onclick = () => { state.view = "sr"; render(); };
 $("#gearReset").onclick = () => {
   gear[gearCls()] = {slots:{}, race:RACES[gearCls()][0], prerempli:true};
   saveGear();
