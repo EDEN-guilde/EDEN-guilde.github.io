@@ -212,6 +212,20 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
 .warn{margin-top:14px; padding:10px 12px; border-left:2px solid var(--import);
   background:rgba(224,163,46,.07); font-size:12.5px; color:var(--ink-dim)}
 
+.srCtrl{margin-top:36px; border-top:1px solid var(--line); padding-top:14px}
+.srCtrl summary{cursor:pointer; color:var(--ink-dim); font-size:14px; user-select:none}
+.srCtrl summary:hover{color:var(--ink)}
+.srCtrl textarea{width:100%; height:92px; margin-top:10px; padding:10px; resize:vertical;
+  background:var(--surface-2); color:var(--ink); border:1px solid var(--line);
+  border-radius:var(--r); font-size:12px; font-family:inherit}
+.srRow{display:flex; gap:10px; align-items:baseline; padding:7px 0;
+  border-bottom:1px solid var(--line-soft); font-size:13.5px; line-height:1.5}
+.srRow .verdict{flex:0 0 14px}
+.srRow.ko .verdict{color:var(--oblig)} .srRow.warn2 .verdict{color:var(--import)}
+.srRow.ok .verdict{color:#7FA25A}
+.srH{margin:18px 0 4px; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--ink-faint)}
+
 .profil{display:grid; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft)}
 .profil textarea{background:var(--surface-2); color:var(--ink); border:1px solid var(--line);
   border-radius:var(--r); padding:8px 10px; font-size:12px; font-family:inherit; resize:vertical}
@@ -356,6 +370,21 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
       <p class="warn" id="gearWarn" hidden></p>
     </div>
   </section>
+
+  <details class="srCtrl" id="srCtrl">
+    <summary>Contrôle des Soft Reserves (officiers)</summary>
+    <p class="sub" style="margin-top:10px">Colle l'export de <b>softres.it</b> : la chaîne
+      « <b>Gargul export</b> » (la même que celle importée dans Gargul) ou le CSV
+      (<code>ItemId,Name,Class,…</code>). L'analyse compare chaque réserve aux listes de
+      priorité et signale les SR sans espoir ou contestées. Rien n'est envoyé : tout se
+      passe dans ton navigateur.</p>
+    <textarea id="srIn" aria-label="Export softres.it" placeholder="Chaîne Gargul ou CSV softres.it…"></textarea>
+    <div style="display:flex; gap:12px; align-items:center; margin-top:10px">
+      <button class="btn" id="srGo" type="button">Analyser</button>
+      <span class="sub" id="srEtat"></span>
+    </div>
+    <div id="srOut"></div>
+  </details>
 
   <footer>
     Priorités reprises telles quelles du Google Sheet de la guilde ; les classes affichées sont déduites
@@ -1441,6 +1470,120 @@ $("#list").addEventListener("change", e => {
 /* Le trash commun a Hyjal et au Black Temple figure sous les deux raids :
    l'en-tete annonce les objets uniques. */
 $("#total").textContent = new Set(DATA.map(d => d.id)).size;
+/* ---- Contrôle des Soft Reserves (softres.it / Gargul) ---------------------
+   L'officier colle la chaîne « Gargul export » de softres.it (JSON compressé
+   zlib puis base64 — exactement ce que Gargul importe) ou le CSV du raid.
+   Chaque réserve est comparée aux paliers de priorité de l'objet. */
+const SR_CLASSE = {warrior:"Guerrier", paladin:"Paladin", hunter:"Chasseur",
+                   rogue:"Voleur", priest:"Prêtre", shaman:"Chaman", mage:"Mage",
+                   warlock:"Démoniste", druid:"Druide"};
+const SR_PAR_ID = {};
+DATA.forEach(d => { if (!SR_PAR_ID[d.id]) SR_PAR_ID[d.id] = d; });
+
+async function srDecode(txt) {
+  txt = txt.trim();
+  if (/^[A-Za-z0-9+/=\s]+$/.test(txt) && !txt.includes(",")) {
+    const bin = Uint8Array.from(atob(txt.replace(/\s+/g, "")), c => c.charCodeAt(0));
+    const flux = new Blob([bin]).stream().pipeThrough(new DecompressionStream("deflate"));
+    const j = JSON.parse(new TextDecoder().decode(await new Response(flux).arrayBuffer()));
+    if (!j.softreserves) throw new Error("chaîne Gargul sans réserves");
+    return j.softreserves.flatMap(sr => (sr.items || []).map(it => ({
+      joueur: sr.name || "?",
+      classe: SR_CLASSE[String(sr.class || "").toLowerCase()] || "",
+      id: String(typeof it === "object" ? it.id : it),
+    })));
+  }
+  /* CSV softres.it : ItemId,Name,Class,Note,Plus (entête en première ligne) */
+  const lignes = txt.split(/\r?\n/).filter(l => l.trim());
+  const tete = lignes[0].split(",").map(s => s.trim().toLowerCase());
+  const iId = tete.indexOf("itemid"), iNom = tete.indexOf("name"), iCl = tete.indexOf("class");
+  if (iId < 0 || iNom < 0) throw new Error("en-tête ItemId / Name introuvable");
+  return lignes.slice(1).map(l => {
+    const c = l.split(",");
+    return {joueur: (c[iNom] || "?").trim(),
+            classe: SR_CLASSE[String(c[iCl] || "").trim().toLowerCase()] || "",
+            id: (c[iId] || "").trim()};
+  }).filter(r => r.id && !/^itemid$/i.test(r.id));
+}
+
+const srChaine = d => d.paliers.length
+  ? d.paliers.map(p => p.map(c =>
+      `<span class="pill" style="--k:var(${KEY(c)})">${esc(c)}</span>`)
+      .join('<span class="sep eq">=</span>')).join('<span class="sep">&gt;</span>')
+  : `<span class="pill open">MS &gt; OS</span>`;
+
+function srRendu(reserves) {
+  const cats = {ko: [], warn: [], ok: []};
+  const parObjet = {};
+  reserves.forEach(r => { (parObjet[r.id] = parObjet[r.id] || []).push(r); });
+  reserves.forEach(r => {
+    const d = SR_PAR_ID[r.id];
+    const qui = `<b>${esc(r.joueur)}</b>` +
+      (r.classe ? ` <span style="color:var(${KEY(r.classe)})">${esc(r.classe)}</span>` : "");
+    if (!d) {
+      cats.warn.push(`${qui} — objet <b>#${esc(r.id)}</b> absent de la base Hyjal/BT (autre raid ? id erroné ?)`);
+      return;
+    }
+    const nom = `<a href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">${esc(nameOf(d))}</a>`;
+    if (!r.classe) {
+      cats.warn.push(`${qui} — classe non reconnue, ${nom} non vérifiable`);
+      return;
+    }
+    const rang = d.paliers.findIndex(p => p.includes(r.classe)) + 1;
+    if (!d.paliers.length) {
+      if (d.elig.includes(r.classe))
+        cats.ok.push(`${qui} — ${nom} : objet ouvert (MS &gt; OS), SR cohérente`);
+      else
+        cats.ko.push(`${qui} — ${nom} : classe non éligible à l'objet`);
+    } else if (rang === 1) {
+      const ex = d.paliers[0].length > 1 ? " (ex æquo)" : "";
+      cats.ok.push(`${qui} — ${nom} : 1re priorité${ex}, SR cohérente`);
+    } else if (rang > 1) {
+      const devant = d.paliers.slice(0, rang - 1).flat();
+      const msg = `${qui} — ${nom} : rang ${rang}, la prio passe d'abord par ` +
+        devant.map(c => `<span style="color:var(${KEY(c)})">${esc(c)}</span>`).join(", ") +
+        ` <span class="sub">(${esc(d.niveau)})</span>`;
+      (d.niveau === "Obligatoire" || d.niveau === "Importante" ? cats.ko : cats.warn).push(msg);
+    } else {
+      cats.ko.push(`${qui} — ${nom} : la prio réserve l'objet à d'autres classes — ${srChaine(d)}`);
+    }
+  });
+  const contestes = Object.entries(parObjet)
+    .filter(([id, rs]) => rs.length > 1 && SR_PAR_ID[id])
+    .map(([id, rs]) => {
+      const d = SR_PAR_ID[id];
+      return `<div class="srRow warn2"><span class="verdict">⚠</span><div>` +
+        `<a href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">${esc(nameOf(d))}</a> — ` +
+        rs.map(r => `<b>${esc(r.joueur)}</b>` + (r.classe
+          ? ` <span style="color:var(${KEY(r.classe)})">${esc(r.classe)}</span>` : "")).join(", ") +
+        ` <span class="sub">(${rs.length} réserves)</span> — ${srChaine(d)}</div></div>`;
+    });
+  const bloc = (titre, l, cls, pic) => l.length
+    ? `<div class="srH">${titre} (${l.length})</div>` +
+      l.map(t => `<div class="srRow ${cls}"><span class="verdict">${pic}</span><div>${t}</div></div>`).join("")
+    : "";
+  return `<p class="sub" style="margin:14px 0 0">${reserves.length} réserves analysées — ` +
+    `<b>${cats.ko.length}</b> incohérentes, <b>${cats.warn.length}</b> à surveiller, ` +
+    `${cats.ok.length} cohérentes.</p>` +
+    bloc("Incohérences", cats.ko, "ko", "✖") +
+    bloc("À surveiller", cats.warn, "warn2", "⚠") +
+    (contestes.length ? `<div class="srH">Objets contestés (${contestes.length})</div>` + contestes.join("") : "") +
+    bloc("Cohérentes", cats.ok, "ok", "✓");
+}
+
+$("#srGo").onclick = async () => {
+  const etat = $("#srEtat"), sortie = $("#srOut");
+  sortie.innerHTML = ""; etat.textContent = "";
+  const txt = $("#srIn").value;
+  if (!txt.trim()) { etat.textContent = "Colle d'abord un export softres.it."; return; }
+  try {
+    sortie.innerHTML = srRendu(await srDecode(txt));
+  } catch (e) {
+    etat.textContent = "Export illisible (" + e.message +
+      ") — attendu : chaîne « Gargul export » ou CSV de softres.it.";
+  }
+};
+
 render();
 </script>
 
