@@ -516,6 +516,21 @@ $("#langFR").onclick = () => { state.lang = "fr"; tipHide(); render(); };
 $("#langEN").onclick = () => { state.lang = "en"; tipHide(); render(); };
 
 /* --- filtrage --- */
+/* Role attendu par spe, pour ne proposer que des objets coherents parmi ceux
+   qui ne nomment pas la classe. Paladin Protection est absent a dessein : son
+   gear mele puissance des sorts et defense, tout lui est montre. */
+const ROLE_SPE = {
+  "Guerrier Armes":"physique", "Guerrier Fureur":"physique", "Guerrier Protection":"physique",
+  "Chasseur Maîtrise des bêtes":"physique", "Chasseur Survie":"physique",
+  "Druide Farouche DPS":"physique", "Druide Farouche Tank":"physique",
+  "Druide Équilibre":"sorts", "Druide Restauration":"sorts",
+  "Chaman Amélioration":"physique", "Chaman Élémentaire":"sorts", "Chaman Restauration":"sorts",
+  "Paladin Vindicte":"physique", "Paladin Sacré":"sorts",
+  "Prêtre Ombre":"sorts", "Prêtre Sacré":"sorts",
+};
+const ROLE_CLASSE = {"Guerrier":"physique", "Voleur":"physique", "Chasseur":"physique",
+                     "Mage":"sorts", "Démoniste":"sorts", "Prêtre":"sorts"};
+
 function matches(d) {
   if (state.raid && d.raid !== state.raid) return false;
   if (state.boss && d.raid + "|" + d.boss !== state.boss) return false;
@@ -524,6 +539,10 @@ function matches(d) {
   if (state.hideOwned && owned.has(d.id)) return false;
   if (state.onlyWish && !wish.has(d.id)) return false;
   if (state.cls) {
+    /* Une spe restauree (URL, memoire) qui n'appartient pas a la classe
+       courante est ignoree : melanger « Druide Équilibre » et Guerrier
+       fausserait le role attendu. */
+    const spe = state.spe && state.spe.startsWith(state.cls + " ") ? state.spe : "";
     const named = d.classes.includes(state.cls);
     /* Un objet sans aucune classe nommee est ouvert a tous (MS > OS) : il fait
        partie de la liste courte de chaque classe eligible. Sans cela, une
@@ -531,7 +550,16 @@ function matches(d) {
     const ouvert = !d.paliers.length && d.elig.includes(state.cls);
     if (state.onlyMine && !named && !ouvert) return false;
     if (!state.all && !named && !d.elig.includes(state.cls)) return false;
-    if (state.spe && !d.spes.includes(state.spe)) return false;
+    /* Spe choisie : si le sheet detaille des spes pour ma classe, il doit
+       nommer la mienne ; s'il nomme la classe sans detailler, l'objet vaut
+       pour toutes ses spes. Et ce qui ne nomme pas ma classe (ouvert MS > OS,
+       ou autres classes prio) n'est montre que si son role colle a la spe —
+       ou a la classe seule quand elle n'a qu'un role possible : un feral ne
+       voit plus les objets casters « libres », ni l'inverse. */
+    if (spe && d.spes.some(x => x.startsWith(state.cls + " ")) &&
+        !d.spes.includes(spe)) return false;
+    const attendu = spe ? ROLE_SPE[spe] : ROLE_CLASSE[state.cls];
+    if (!named && attendu && d.role !== "mixte" && d.role !== attendu) return false;
     if (state.ranks.length) {
       const r = tierOf(d);
       if (!state.ranks.includes(r >= 99 ? "-" : String(Math.min(r, 4)))) return false;
@@ -870,8 +898,7 @@ Object.entries(T6).forEach(([tok, parClasse]) =>
       { T6_PIECES[id] = {en, fr, role, tok: String(tok), cls: c}; })));
 
 /* Les classes pures n'ont qu'un role possible ; les hybrides voient tout. */
-const ROLE_DEFAUT = {"Guerrier":"physique", "Voleur":"physique", "Chasseur":"physique",
-                     "Mage":"sorts", "Démoniste":"sorts", "Prêtre":"sorts"};
+const ROLE_DEFAUT = ROLE_CLASSE;
 const roleOK = r => {
   const pref = monGear().role || "tous";
   return pref === "tous" || r === "mixte" || r === pref;
