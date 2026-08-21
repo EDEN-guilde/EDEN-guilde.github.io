@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <title>EDEN — Loots Hyjal &amp; Black Temple</title>
+<link rel="icon" href="https://wow.zamimg.com/images/wow/icons/large/inv_weapon_glave_01.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap">
@@ -22,9 +23,39 @@ body{
 a{color:inherit}
 .wrap{max-width:1120px; margin:0 auto; padding:28px 20px 80px}
 
-/* ---------- en-tête ---------- */
-.masthead{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 16px; padding-bottom:18px;
-  border-bottom:1px solid var(--line)}
+/* ---------- en-tête ----------
+   Bandeau illustré : Temple Noir (Illidan) par défaut, bataille d'Hyjal quand
+   le filtre raid est sur Hyjal. Images locales (art/), fondu sombre pour
+   garder le titre lisible. */
+.masthead{display:flex; flex-wrap:wrap; align-items:baseline; align-content:end; gap:8px 16px;
+  position:relative; min-height:150px; padding:64px 24px 24px; margin:-28px -20px 0;
+  overflow:hidden; border-radius:0 0 14px 14px; isolation:isolate}
+.masthead::before{content:""; position:absolute; inset:0; z-index:-2;
+  background-image:url("art/bt.jpg"); background-size:cover;
+  background-position:center 68%; filter:saturate(.92)}
+body[data-art="hyjal"] .masthead::before{background-image:url("art/hyjal.jpg");
+  background-position:center 22%}
+.masthead::after{content:""; position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(180deg, rgba(11,10,7,.50), rgba(11,10,7,.82) 62%, var(--ground) 100%),
+             linear-gradient(90deg, rgba(11,10,7,.72), rgba(11,10,7,.18) 60%)}
+.masthead .sub{color:#CBC2AE}
+
+/* Accents par raid filtré : vert gangrené côté Temple Noir, turquoise
+   Arbre-Monde côté Hyjal. Les médailles et niveaux gardent leurs couleurs. */
+body[data-art="bt"]{--gold:#9BC53D; --gold-dim:#5F7C25}
+body[data-art="hyjal"]{--gold:#57C7A6; --gold-dim:#2F6E5A}
+body[data-art="bt"] .chip[aria-pressed="true"]{background:rgba(155,197,61,.12)}
+body[data-art="hyjal"] .chip[aria-pressed="true"]{background:rgba(87,199,166,.13)}
+body[data-art="bt"] .switch input:checked{background:rgba(155,197,61,.28)}
+body[data-art="hyjal"] .switch input:checked{background:rgba(87,199,166,.28)}
+
+/* Séparateur « Glaives de guerre » entre les onglets et le contenu */
+.sepGlaive{display:flex; align-items:center; gap:12px; margin:20px 0 2px}
+.sepGlaive::before,.sepGlaive::after{content:""; flex:1; height:1px}
+.sepGlaive::before{background:linear-gradient(90deg,transparent,var(--gold-dim))}
+.sepGlaive::after{background:linear-gradient(90deg,var(--gold-dim),transparent)}
+.sepGlaive img{width:26px; height:26px; border-radius:6px; border:1px solid var(--gold-dim)}
+.sepGlaive img.flip{transform:scaleX(-1)}
 h1{font-family:"Cinzel",Georgia,serif; font-weight:700; font-size:clamp(24px,3.4vw,34px);
   letter-spacing:.01em; margin:0; text-wrap:balance;
   background:linear-gradient(180deg,#F3DFAE,#C99433); -webkit-background-clip:text;
@@ -94,7 +125,9 @@ select:hover,input[type=search]:hover{border-color:var(--gold-dim)}
 .boss > h2{position:sticky; top:0; z-index:2; margin:0; padding:9px 2px 8px;
   background:linear-gradient(180deg,var(--ground) 72%,rgba(18,16,12,0));
   font-family:"Cinzel",Georgia,serif; font-size:16px; font-weight:600; letter-spacing:.02em;
-  display:flex; align-items:baseline; gap:10px}
+  display:flex; align-items:center; gap:10px}
+.bossart{width:34px; height:34px; border-radius:50%; border:1px solid var(--gold-dim);
+  object-fit:cover; box-shadow:0 2px 8px rgba(0,0,0,.5); flex:none}
 .boss > h2 em{font:400 11px/1 "Barlow",sans-serif; letter-spacing:.14em; text-transform:uppercase;
   color:var(--ink-faint); font-style:normal}
 
@@ -264,6 +297,11 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
     <button type="button" id="viewPrio" role="tab">Priorités de loot</button>
     <button type="button" id="viewGear" role="tab">Mon stuff</button>
   </nav>
+
+  <div class="sepGlaive" aria-hidden="true">
+    <img src="https://wow.zamimg.com/images/wow/icons/large/inv_weapon_glave_01.jpg" alt="">
+    <img class="flip" src="https://wow.zamimg.com/images/wow/icons/large/inv_weapon_glave_01.jpg" alt="">
+  </div>
 
   <section class="panel" id="filters" aria-label="Filtres">
     <div class="field" role="group" aria-label="Classe">
@@ -650,6 +688,15 @@ function matches(d) {
   }
   return true;
 }
+/* fichiers de vignettes par boss (site/art/boss/) */
+const BOSS_ART = {
+  "Rage Winterchill":"rage-winterchill", "Anetheron":"anetheron", "Kaz'rogal":"kazrogal",
+  "Azgalor":"azgalor", "Archimonde":"archimonde",
+  "Grand Maître de Guerre Naj'entus":"najentus", "Suprémus":"supremus",
+  "Ombre d'Akama":"ombre-akama", "Teron Fléau-Sanglant":"teron",
+  "Reliquaire des Âmes":"reliquaire", "Gurtogg Ronge-Sang":"gurtogg",
+  "Mère Shahraz":"shahraz", "Conseil Illidari":"conseil", "Illidan Storm-Rage":"illidan",
+};
 const LVLORDER = {"Obligatoire":0, "Importante":1, "Stratégique":2, "Libre":3};
 const tierOf = d => {
   if (!state.cls) return 99;
@@ -659,6 +706,8 @@ const tierOf = d => {
 const rankOf = tierOf;
 
 function render() {
+  /* habillage par raid filtré : bandeau + accents (voir CSS body[data-art]) */
+  document.body.dataset.art = state.raid === "Hyjal" ? "hyjal" : (state.raid ? "bt" : "");
   const gearVue = state.view === "gear";
   $("#viewPrio").setAttribute("aria-pressed", !gearVue);
   $("#viewGear").setAttribute("aria-pressed", gearVue);
@@ -732,7 +781,13 @@ function render() {
     const sec = document.createElement("section");
     sec.className = "boss";
     const h = document.createElement("h2");
-    h.innerHTML = `${esc(g.boss)} <em>${esc(g.raid)} — ${g.rows.length} objet${g.rows.length > 1 ? "s" : ""}</em>`;
+    /* vignette du boss : artworks TCG/officiels recadrés (art/boss/), crâne
+       générique pour le trash */
+    const art = BOSS_ART[g.boss]
+      ? `art/boss/${BOSS_ART[g.boss]}.jpg`
+      : "https://wow.zamimg.com/images/wow/icons/medium/inv_misc_bone_skull_02.jpg";
+    h.innerHTML = `<img class="bossart" src="${art}" alt="" loading="lazy">` +
+      `${esc(g.boss)} <em>${esc(g.raid)} — ${g.rows.length} objet${g.rows.length > 1 ? "s" : ""}</em>`;
     sec.append(h);
     g.rows.forEach(d => sec.append(rowEl(d)));
     frag.append(sec);
