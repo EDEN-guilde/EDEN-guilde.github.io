@@ -1565,6 +1565,10 @@ function srRendu(reserves) {
   return `<p class="sub" style="margin:14px 0 0">${reserves.length} réserves analysées — ` +
     `<b>${cats.ko.length}</b> incohérentes, <b>${cats.warn.length}</b> à surveiller, ` +
     `${cats.ok.length} cohérentes.</p>` +
+    `<div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:10px 0 2px">
+       <button class="btn ghost" id="srCopie" type="button">Copier la chaîne pour l'addon</button>
+       <span class="sub">à coller en jeu (« /eden sr … ») : l'alerte de roll de l'addon (v1.3+)
+       se taira sur ces objets déjà soft-res</span></div>` +
     bloc("Incohérences", cats.ko, "ko", "✖") +
     bloc("À surveiller", cats.warn, "warn2", "⚠") +
     (contestes.length ? `<div class="srH">Objets contestés (${contestes.length})</div>` + contestes.join("") : "") +
@@ -1577,7 +1581,16 @@ $("#srGo").onclick = async () => {
   const txt = $("#srIn").value;
   if (!txt.trim()) { etat.textContent = "Colle d'abord un export softres.it."; return; }
   try {
-    sortie.innerHTML = srRendu(await srDecode(txt));
+    const reserves = await srDecode(txt);
+    sortie.innerHTML = srRendu(reserves);
+    /* chaîne « /eden sr ... » : ids uniques des réserves, pour que l'alerte de
+       roll de l'addon ignore les objets déjà soft-res */
+    const cmd = "/eden sr " + [...new Set(reserves.map(r => r.id))].join(",");
+    const btn = $("#srCopie");
+    if (btn) btn.onclick = () => navigator.clipboard.writeText(cmd).then(() => {
+      btn.textContent = "Copié !";
+      setTimeout(() => { btn.textContent = "Copier la chaîne pour l'addon"; }, 1600);
+    });
   } catch (e) {
     etat.textContent = "Export illisible (" + e.message +
       ") — attendu : chaîne « Gargul export » ou CSV de softres.it.";
