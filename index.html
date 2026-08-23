@@ -1685,7 +1685,7 @@ function srRendu(reserves) {
       cats.warn.push(`${qui} — objet <b>#${esc(r.id)}</b> absent de la base Hyjal/BT (autre raid ? id erroné ?)`);
       return;
     }
-    const nom = `<a href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">${esc(nameOf(d))}</a>`;
+    const nom = `<a class="name" href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">${esc(nameOf(d))}</a>`;
     if (!r.classe) {
       cats.warn.push(`${qui} — classe non reconnue, ${nom} non vérifiable`);
       return;
@@ -1730,7 +1730,7 @@ function srRendu(reserves) {
     .map(([id, rs]) => {
       const d = SR_PAR_ID[id];
       return `<div class="srRow warn2"><span class="verdict">⚠</span><div>` +
-        `<a href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">${esc(nameOf(d))}</a> — ` +
+        `<a class="name" href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">${esc(nameOf(d))}</a> — ` +
         rs.map(r => `<b>${esc(r.joueur)}</b>` + (r.classe
           ? ` <span style="color:var(${KEY(r.classe)})">${esc(r.classe)}</span>` : "")).join(", ") +
         ` <span class="sub">(${rs.length} réserves)</span> — ${srChaine(d)}</div></div>`;
