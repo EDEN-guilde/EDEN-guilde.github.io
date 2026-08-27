@@ -1641,6 +1641,17 @@ const SR_CLASSE = {warrior:"Guerrier", paladin:"Paladin", hunter:"Chasseur",
 const SR_PAR_ID = {};
 DATA.forEach(d => { if (!SR_PAR_ID[d.id]) SR_PAR_ID[d.id] = d; });
 
+/* Éligibilité TECHNIQUE : d.elig est la liste courte des classes pertinentes
+   (celle qui alimente les filtres) — mais pour une armure, d'autres classes
+   peuvent l'équiper (un Paladin porte cuir et mailles, tout le monde porte le
+   tissu). Une SR de ces classes n'est pas « non éligible », juste hors chaîne
+   de prio. Armes, reliques et jetons : d.elig est déjà l'éligibilité réelle. */
+const SR_PORTE = {Plaques: ["Guerrier", "Paladin"],
+                  Mailles: ["Guerrier", "Paladin", "Chasseur", "Chaman"],
+                  Cuir: ["Guerrier", "Paladin", "Chasseur", "Chaman", "Voleur", "Druide"]};
+const srEquipable = (d, cl) => d.elig.includes(cl) ||
+  (d.cat === "Armure" && (!SR_PORTE[d.sub] || SR_PORTE[d.sub].includes(cl)));
+
 async function srDecode(txt) {
   txt = txt.trim();
   if (/^[A-Za-z0-9+/=\s]+$/.test(txt) && !txt.includes(",")) {
@@ -1694,12 +1705,14 @@ function srRendu(reserves) {
     if (!d.paliers.length) {
       if (d.elig.includes(r.classe))
         cats.ok.push(`${qui} — ${nom} : objet ouvert (MS &gt; OS), SR cohérente`);
+      else if (srEquipable(d, r.classe))
+        cats.warn.push(`${qui} — ${nom} : objet ouvert, hors des classes conseillées mais équipable — SR valable (OS ?)`);
       else
         cats.ko.push(`${qui} — ${nom} : classe non éligible à l'objet`);
     } else if (rang === 1) {
       const ex = d.paliers[0].length > 1 ? " (ex æquo)" : "";
       cats.ok.push(`${qui} — ${nom} : 1re priorité${ex}, SR cohérente`);
-    } else if (!d.elig.includes(r.classe)) {
+    } else if (!srEquipable(d, r.classe)) {
       cats.ko.push(`${qui} — ${nom} : classe non éligible à l'objet`);
     } else {
       /* La prio « peut aller au suivant » : une SR de rang 2+ (ou hors chaîne)
