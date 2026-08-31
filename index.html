@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>EDEN — Loots Hyjal &amp; Black Temple</title>
+<title>EDEN</title>
 <link rel="icon" href="https://wow.zamimg.com/images/wow/icons/large/inv_weapon_glave_01.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -219,10 +219,10 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
   font-size:12.5px; color:var(--ink-faint)}
 /* ---------- onglets ---------- */
 .views{display:flex; gap:4px; margin:16px 0 0}
-.views button{padding:8px 16px; cursor:pointer; background:transparent; color:var(--ink-faint);
+.views button,.views a{padding:8px 16px; cursor:pointer; background:transparent; color:var(--ink-faint);
   border:1px solid var(--line); border-bottom:none; border-radius:var(--r) var(--r) 0 0;
-  font-size:13.5px; letter-spacing:.02em}
-.views button:hover{color:var(--ink)}
+  font-size:13.5px; letter-spacing:.02em; text-decoration:none; display:inline-block}
+.views button:hover,.views a:hover{color:var(--ink)}
 .views button[aria-pressed="true"]{background:var(--surface); color:var(--gold);
   border-color:var(--line); font-weight:600}
 .views + .panel, .views + section{border-top:1px solid var(--line); padding-top:16px}
@@ -300,8 +300,8 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
 
 <div class="wrap">
   <header class="masthead">
-    <h1>EDEN — Loots Hyjal &amp; Black Temple</h1>
-    <p class="sub">Priorité de butin phase 3 — <b id="total">0</b> objets. Choisis ta classe.</p>
+    <h1>EDEN</h1>
+    <p class="sub">Hyjal &amp; Temple Noir, phase 3 — <b id="total">0</b> objets. Choisis ta classe.</p>
     <div class="lang" role="group" aria-label="Langue des noms d'objets">
       <button type="button" id="langFR" aria-label="Noms des objets en français">FR</button>
       <button type="button" id="langEN" aria-label="Noms des objets en anglais">EN</button>
@@ -312,6 +312,7 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
     <button type="button" id="viewPrio" role="tab">Priorités de loot</button>
     <button type="button" id="viewGear" role="tab">Mon stuff</button>
     <button type="button" id="viewSR" role="tab">Contrôle SR</button>
+    <a href="organisateur.html" role="tab">Organisateur de raid</a>
   </nav>
 
   <div class="sepGlaive" aria-hidden="true">
