@@ -1,6 +1,6 @@
 # Prio de loot EDEN — mode d'emploi
 
-**https://eden-guilde.github.io/eden-loot-prio-p3/**
+**https://eden-guilde.github.io/**
 
 Hyjal + Black Temple, 198 objets. Rien à installer, rien à créer.
 
