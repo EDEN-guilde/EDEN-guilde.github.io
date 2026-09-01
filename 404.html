@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>EDEN — page déplacée</title>
+<link rel="icon" href="https://wow.zamimg.com/images/wow/icons/large/inv_weapon_glave_01.jpg">
+<script>
+/* Redirection des anciennes adresses (le site vivait sous /eden-loot-prio-p3/,
+   il est maintenant à la racine). Les filtres ?c=Classe et le hash sont
+   conservés. Les autres 404 renvoient aussi à l'accueil, après le message. */
+(function () {
+  var ancien = '/eden-loot-prio-p3';
+  if (location.pathname.indexOf(ancien) === 0) {
+    var reste = location.pathname.slice(ancien.length).replace(/^\//, '');
+    location.replace('/' + reste + location.search + location.hash);
+  }
+})();
+</script>
+<meta http-equiv="refresh" content="4;url=/">
+<style>
+body{margin:0;background:#12100C;color:#EDE3D0;font:16px/1.5 "Segoe UI",sans-serif;
+     display:flex;align-items:center;justify-content:center;height:100vh;text-align:center}
+a{color:#D9A441}
+</style></head><body>
+<div>
+  <h1 style="color:#D9A441">EDEN</h1>
+  <p>Cette page n'existe pas (ou plus) — le site est ici :<br>
+  <a href="/">https://eden-guilde.github.io/</a></p>
+  <p style="color:#7C7263;font-size:13px">Redirection automatique dans quelques secondes…</p>
+</div>
+</body></html>
