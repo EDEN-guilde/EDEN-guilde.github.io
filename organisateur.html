@@ -161,9 +161,10 @@ dialog::backdrop{background:#000B}
     <h2>Importer la compo Raid-Helper</h2>
     <p>Colle l'export du <b>Composition Tool</b> ou de l'événement raid-helper.dev
     (JSON ou CSV), ou simplement le <b>lien de l'événement</b>, puis Importer.
-    Chaque raid part d'une feuille blanche : les inscrits remplissent les 25
-    postes (classe puis rôle), les cartes s'adaptent, un poste sans inscrit
-    affiche « — » et peut être réattribué ci-dessous.</p>
+    Chaque raid part d'une feuille blanche : les inscrits sont placés par
+    classe puis par rôle — <b>jamais hors rôle</b> (pas de DPS sur un poste
+    heal). Ce qui ne se place pas tout seul reste à ta main : poste sans
+    inscrit = « — », réattribuable ci-dessous ou d'un clic sur les cartes.</p>
     <textarea id="imp-texte" placeholder="Export JSON/CSV du Composition Tool… ou https://raid-helper.dev/event/…"></textarea>
     <div class="boutons">
       <button class="btn" id="btn-analyser">⬇ Importer</button>
@@ -380,12 +381,18 @@ function dessinerVacants() {
     const o0 = document.createElement('option');
     o0.value = ''; o0.textContent = TIRET + ' non pourvu';
     sel.appendChild(o0);
+    const gMeme = document.createElement('optgroup');
+    gMeme.label = 'M\u00eame r\u00f4le (' + p.cat + ')';
+    const gAutres = document.createElement('optgroup');
+    gAutres.label = 'Hors r\u00f4le \u2014 \u00e0 toi de juger';
     for (const g of gensTries(p)) {
       const o = document.createElement('option');
       o.value = g.nom;
       o.textContent = g.nom + ' \u2014 ' + (g.classe || '?') + (g.spec ? ' (' + g.spec + ')' : '');
-      sel.appendChild(o);
+      (g.cat === p.cat ? gMeme : gAutres).appendChild(o);
     }
+    if (gMeme.children.length) sel.appendChild(gMeme);
+    if (gAutres.children.length) sel.appendChild(gAutres);
     const occ = AFFECTES[p.id];
     if (occ && occ.cumul) sel.value = occ.nom;
     sel.addEventListener('change', () => {
@@ -450,7 +457,7 @@ function clicMention(ev, idx) {
     const items = gensTries(p).map(g => ({
       label: g.nom, couleur: COULEUR_CLASSE[g.classe],
       icone: iconeSpec(g.classe, g.spec),
-      det: (g.classe || '') + (g.cat ? ' \u00b7 ' + g.cat : ''),
+      det: (g.classe || '') + (g.cat !== p.cat ? ' \u00b7 \u26a0 hors r\u00f4le' : ''),
       action: () => { poserMention(idx, alias, g.nom); },
     }));
     items.push({label: TIRET + ' (vider)', action: () => poserMention(idx, alias, TIRET)});
@@ -655,12 +662,12 @@ async function importer() {
     }
     // homonyme d'un poste déjà pris : traité comme un nouveau via les phases
   }
-  // 1-4. placements par affinité décroissante
+  // 1-2. placements automatiques : JAMAIS hors rôle (pas de DPS sur un poste
+  // heal, etc.) — même classe + même rôle, puis même rôle seul. Le reste est
+  // laissé à l'orga via les sélecteurs.
   const phases = [
     [(p, e) => p.classe === e.classe && p.cat === e.cat, ''],
-    [(p, e) => p.classe === e.classe, ''],
-    [(p, e) => e.classe && p.cat === e.cat, ' <span class="warn">(classe diff\u00e9rente du poste)</span>'],
-    [(p, e) => true, ' <span class="warn">(placement par d\u00e9faut)</span>'],
+    [(p, e) => e.cat && p.cat === e.cat, ' <span class="warn">(classe diff\u00e9rente, m\u00eame r\u00f4le)</span>'],
   ];
   for (const [ok, note] of phases) {
     for (const e of entrees) {
@@ -676,17 +683,19 @@ async function importer() {
     }
   }
   for (const e of entrees.filter(e => !e.place))
-    lignes.push('<span class="ko">' + e.nom + '</span> (' + (e.classe || e.brut || '?') +
-                ') : plus aucun poste libre (raid complet).');
+    lignes.push('<span class="ko">' + e.nom.split('/')[0].trim() + '</span> (' +
+                (e.classe || e.brut || '?') + (e.cat ? ' \u00b7 ' + e.cat : '') +
+                ') : aucun poste libre de son r\u00f4le — \u00e0 placer via les s\u00e9lecteurs ci-dessous.');
   for (const id of libres) {
     const p = POSTES.find(p => p.id === id);
     lignes.push('<span class="ko">Poste non pourvu</span> : ' + p.role +
                 ' (groupe ' + p.groupe + ') — r\u00e9attribuable ci-dessous.');
   }
-  // compo courante pour les menus/sélecteurs = les inscrits placés
-  GENS = entrees.filter(e => e.place)
-                .map(e => ({nom: e.nomCourt || e.nom.split('/')[0].trim(),
+  // compo courante pour les menus/sélecteurs = TOUS les inscrits (même ceux
+  // sans poste : l'orga peut les placer à la main)
+  GENS = entrees.map(e => ({nom: e.nomCourt || e.nom.split('/')[0].trim(),
                             classe: e.classe, spec: e.spec, cat: e.cat}));
+  GENS = GENS.filter((g, i) => GENS.findIndex(x => x.nom === g.nom && x.classe === g.classe) === i);
   rap.innerHTML = lignes.join('<br>');
   appliquer();
 }
