@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>EDEN — Organisateur de raid</title>
 <link rel="icon" href="https://wow.zamimg.com/images/wow/icons/large/inv_weapon_glave_01.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,79 +11,83 @@
   --ground:#12100C; --surface:#1B1813; --surface-2:#221E17; --line:#332C22; --line-soft:#2A241C;
   --ink:#EDE3D0; --ink-dim:#A99C86; --ink-faint:#7C7263;
   --gold:#D9A441; --gold-dim:#8C6A28; --r:6px;
-  --c-guerrier:#C69B6D; --c-paladin:#F48CBA; --c-chasseur:#AAD372; --c-voleur:#FFF468;
-  --c-pretre:#F0F0F0; --c-chaman:#3B8CE0; --c-mage:#3FC7EB; --c-demoniste:#8788EE; --c-druide:#FF7C0A;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--ground);color:var(--ink);
-     font-family:"Barlow","Segoe UI",system-ui,sans-serif;font-size:14.5px;line-height:1.45;
-     -webkit-font-smoothing:antialiased;display:flex;height:100vh;overflow:hidden}
-.classe-Guerrier{color:var(--c-guerrier)}.classe-Paladin{color:var(--c-paladin)}
-.classe-Chasseur{color:var(--c-chasseur)}.classe-Voleur{color:var(--c-voleur)}
-.classe-Prêtre{color:var(--c-pretre)}.classe-Chaman{color:var(--c-chaman)}
-.classe-Mage{color:var(--c-mage)}.classe-Démoniste{color:var(--c-demoniste)}
-.classe-Druide{color:var(--c-druide)}
-#lateral{width:352px;min-width:352px;background:var(--surface);
-         border-right:1px solid var(--line);display:flex;flex-direction:column}
-#lateral h1{font-family:"Cinzel","Barlow",serif;font-size:19px;letter-spacing:.06em;
-            color:var(--gold);margin:14px 16px 1px;font-weight:700}
-#lateral .sous{font-size:12px;color:var(--ink-dim);font-style:italic;margin:0 16px 10px}
-#lateral .sous a{color:var(--gold);text-decoration:none}
-#lateral .sous a:hover{text-decoration:underline}
-#postes{flex:1;overflow-y:auto;padding:0 12px 10px}
-.titre-groupe{color:var(--gold);font-weight:600;font-size:11px;letter-spacing:.14em;
-              text-transform:uppercase;margin:12px 2px 5px;border-bottom:1px solid var(--line);
-              padding-bottom:3px}
-.poste{display:flex;align-items:center;gap:8px;margin:3px 0;padding:2px 4px;border-radius:var(--r)}
-.poste .role{flex:1;font-size:11px;color:var(--ink-faint);line-height:1.25}
-.poste .role b{display:block;font-size:12.5px;font-weight:600}
-.poste select{width:136px;background:var(--surface-2);color:var(--ink);
-              border:1px solid var(--line);border-radius:var(--r);padding:4px 5px;font-size:13px;
-              font-family:inherit}
-.poste.change{background:rgba(217,164,65,.07)}
-.poste.change select{border-color:var(--gold)}
-#actions{padding:10px 12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:7px}
-.btn{padding:7px 12px;cursor:pointer;background:rgba(217,164,65,.14);color:var(--ink);
-     border:1px solid var(--gold);border-radius:var(--r);font-size:13px;font-family:inherit;
-     text-decoration:none;display:inline-block}
-.btn:hover{background:rgba(217,164,65,.26)}
-.btn.discret{background:transparent;border-color:var(--line);color:var(--ink-dim)}
-.btn.discret:hover{color:var(--ink);border-color:var(--gold-dim)}
-#bilan{width:100%;font-size:12px;color:var(--gold)}
-#principal{flex:1;display:flex;flex-direction:column;min-width:0}
-#barre{display:flex;flex-wrap:wrap;gap:4px;padding:10px 12px 0;background:var(--surface);
-       border-bottom:1px solid var(--line)}
-.onglet{padding:7px 14px;cursor:pointer;background:transparent;color:var(--ink-faint);
-        border:1px solid var(--line);border-bottom:none;border-radius:var(--r) var(--r) 0 0;
-        font-size:13px;letter-spacing:.02em;font-family:inherit}
+body{margin:0; background:var(--ground); color:var(--ink);
+     font-family:"Barlow","Segoe UI",system-ui,sans-serif; font-size:15px; line-height:1.45;
+     -webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1120px; margin:0 auto; padding:28px 20px 80px}
+.masthead{display:flex; flex-wrap:wrap; align-items:baseline; align-content:end; gap:8px 16px;
+  min-height:120px; padding:18px 20px 14px; margin:0 -20px;
+  background:linear-gradient(180deg, rgba(18,16,12,.35), rgba(18,16,12,.88) 78%, #12100C),
+             url('art/bt.jpg') center 28%/cover no-repeat var(--surface);
+  border-bottom:1px solid var(--line)}
+.masthead h1{font-family:"Cinzel","Barlow",serif; font-size:34px; font-weight:700;
+  letter-spacing:.08em; color:var(--gold); margin:0; text-shadow:0 2px 8px #000}
+.masthead .sub{color:var(--ink-dim); font-size:13.5px; margin:0; font-style:italic}
+.views{display:flex; flex-wrap:wrap; gap:4px; margin:16px 0 0}
+.views button,.views a{padding:8px 16px; cursor:pointer; background:transparent; color:var(--ink-faint);
+  border:1px solid var(--line); border-bottom:none; border-radius:var(--r) var(--r) 0 0;
+  font-size:13.5px; letter-spacing:.02em; text-decoration:none; display:inline-block;
+  font-family:inherit}
+.views button:hover,.views a:hover{color:var(--ink)}
+.views button[aria-pressed="true"]{background:var(--surface); color:var(--gold);
+  border-color:var(--line); font-weight:600}
+.views + .sepGlaive{border-top:1px solid var(--line)}
+.sepGlaive{display:flex; justify-content:center; gap:8px; padding:14px 0 4px}
+.sepGlaive img{width:26px; height:26px; border-radius:5px; border:1px solid var(--gold-dim)}
+.sepGlaive .flip{transform:scaleX(-1)}
+#barre{display:flex; flex-wrap:wrap; gap:4px; margin:14px 0 0}
+.onglet{padding:6px 13px; cursor:pointer; background:transparent; color:var(--ink-faint);
+        border:1px solid var(--line); border-bottom:none; border-radius:var(--r) var(--r) 0 0;
+        font-size:12.5px; letter-spacing:.02em; font-family:inherit}
 .onglet:hover{color:var(--ink)}
-.onglet.actif{background:var(--ground);color:var(--gold);font-weight:600}
-#cartes{flex:1;overflow:auto;padding:14px}
-.carte svg{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:var(--r)}
+.onglet.actif{background:var(--surface); color:var(--gold); font-weight:600}
+.carte svg{width:100%; height:auto; display:block; border:1px solid var(--line);
+           border-radius:0 var(--r) var(--r) var(--r)}
 .carte text{font-family:'Inter','Segoe UI',sans-serif}
-dialog{background:var(--surface);color:var(--ink);border:1px solid var(--gold-dim);
-       border-radius:8px;max-width:600px;font-family:"Barlow","Segoe UI",sans-serif}
-dialog h3{margin-top:0;font-family:"Cinzel",serif;color:var(--gold);letter-spacing:.05em}
-dialog p{font-size:12.5px;color:var(--ink-dim)}
-dialog textarea{width:540px;height:190px;background:var(--ground);color:var(--ink);
-                border:1px solid var(--line);border-radius:var(--r);font:12px Consolas,monospace;
-                padding:6px}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+       padding:16px 18px; margin-top:22px}
+.panel h2{font-family:"Cinzel",serif; font-size:17px; color:var(--gold); margin:0 0 4px;
+          letter-spacing:.05em}
+.panel p{font-size:13px; color:var(--ink-dim); margin:4px 0 10px}
+textarea{width:100%; height:120px; background:var(--ground); color:var(--ink);
+         border:1px solid var(--line); border-radius:var(--r);
+         font:12px Consolas,monospace; padding:8px}
+.btn{padding:8px 14px; cursor:pointer; background:rgba(217,164,65,.14); color:var(--ink);
+     border:1px solid var(--gold); border-radius:var(--r); font-size:13.5px; font-family:inherit;
+     text-decoration:none; display:inline-block}
+.btn:hover{background:rgba(217,164,65,.26)}
+.btn.discret{background:transparent; border-color:var(--line); color:var(--ink-dim)}
+.btn.discret:hover{color:var(--ink); border-color:var(--gold-dim)}
+.boutons{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; align-items:center}
+#bilan{font-size:13px; color:var(--gold)}
+#rapport{font-size:13px; margin-top:12px; line-height:1.6}
+#rapport .ok{color:#7FB069} #rapport .warn{color:#E0A32E} #rapport .ko{color:#D6453C}
+dialog{background:var(--surface); color:var(--ink); border:1px solid var(--gold-dim);
+       border-radius:8px; max-width:600px; font-family:"Barlow","Segoe UI",sans-serif}
+dialog h3{margin-top:0; font-family:"Cinzel",serif; color:var(--gold); letter-spacing:.05em}
+dialog p{font-size:12.5px; color:var(--ink-dim)}
+dialog textarea{width:540px; height:190px}
 dialog::backdrop{background:#000B}
-#rapport{font-size:12.5px;margin:10px 0;max-height:180px;overflow-y:auto}
-#rapport .ok{color:#7FB069}#rapport .warn{color:#E0A32E}#rapport .ko{color:#D6453C}
 </style></head><body>
-<div id="lateral">
-  <h1>EDEN · Organisateur de raid</h1>
-  <div class="sous"><a href="./">← Loots &amp; stuff EDEN</a><br>Choisis qui joue à chaque poste : les cartes se mettent à jour en direct.</div>
-  <div id="postes"></div>
-  <div id="actions">
-    <button class="btn" id="btn-import">⬇ Import Raid-Helper</button>
-    <button class="btn" id="btn-export">📋 Export</button>
-    <button class="btn discret" id="btn-raz">↺ Réinitialiser</button>
-    <div id="bilan">Aucun changement.</div>
+<div class="wrap">
+  <header class="masthead">
+    <h1>EDEN</h1>
+    <p class="sub">Organisateur de raid — Hyjal &amp; Temple Noir, phase 3</p>
+  </header>
+  <nav class="views" role="tablist">
+    <a href="./" role="tab">Priorités de loot</a>
+    <a href="./" role="tab">Mon stuff</a>
+    <a href="./" role="tab">Contrôle SR</a>
+    <button type="button" role="tab" aria-pressed="true">Organisateur de raid</button>
+  </nav>
+  <div class="sepGlaive" aria-hidden="true">
+    <img src="https://wow.zamimg.com/images/wow/icons/large/inv_weapon_glave_01.jpg" alt="">
+    <img class="flip" src="https://wow.zamimg.com/images/wow/icons/large/inv_weapon_glave_01.jpg" alt="">
   </div>
-</div>
-<div id="principal">
+
   <div id="barre"><button class="onglet" data-c="0">Winterchill</button>
 <button class="onglet" data-c="1">Anetheron</button>
 <button class="onglet" data-c="2">Kaz'rogal</button>
@@ -115,24 +120,30 @@ dialog::backdrop{background:#000B}
 <div class="carte" id="carte-13" hidden><svg data-tutorial="map-canvas-dropzone" viewBox="441 71 1009 803" class="w-full h-full " preserveAspectRatio="xMidYMid slice" style="background-color: rgb(17, 17, 17); cursor: default; user-select: none;"><image data-oxm="115" x="0" y="0" width="1920" height="922" preserveAspectRatio="none" data-background="true"></image><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"></path></pattern></defs><g data-tutorial-element="area" data-tutorial-id="el-1786493065107-20"><g style="cursor: pointer;"><g><ellipse cx="951.2957513123358" cy="518.5947506561681" rx="64" ry="64" fill="#44FF88" fill-opacity="0.25" stroke="#44FF88" stroke-width="1"></ellipse></g><text x="951.2957513123358" y="519.5947506561681" text-anchor="middle" dominant-baseline="central" fill="white" font-size="11" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="3" paint-order="stroke">Pack</tspan></text></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786492557867-2"><g style="cursor: pointer;"><line x1="1118" y1="698" x2="1061" y2="731" stroke="transparent" stroke-width="12"></line><line x1="1118" y1="698" x2="1069.9937737799535" y2="725.7930783379217" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1061,731 1066.9875561567032,720.6005206250348 1072.9999914032037,730.9856360508084" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786492567252-3"><g style="cursor: pointer;"><line x1="1048.2881889763776" y1="735.9359580052492" x2="982.2881889763776" y2="750.9359580052492" stroke="transparent" stroke-width="12"></line><line x1="1048.2881889763776" y1="735.9359580052492" x2="992.4220668785408" y2="748.6328039365757" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="982.2881889763776,750.9359580052492 991.092340257007,742.7820068018269 993.7517935000747,754.4836010713244" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786492578033-4"><g style="cursor: pointer;"><line x1="938.192125984252" y1="750" x2="867.192125984252" y2="741" stroke="transparent" stroke-width="12"></line><line x1="938.192125984252" y1="750" x2="877.5019307064" y2="742.3068766549202" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="867.192125984252,741 878.2564562949158,736.3545081232955 876.7474051178842,748.2592451865447" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786492583895-5"><g style="cursor: pointer;"><line x1="851.0320209973754" y1="737.9359580052494" x2="794" y2="704" stroke="transparent" stroke-width="12"></line><line x1="851.0320209973754" y1="737.9359580052494" x2="802.9308369363242" y2="709.314146367648" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="794,704 805.9989607721989,704.1579252583726 799.8627131004496,714.4703674769235" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786492609950-6"><g style="cursor: pointer;"><circle cx="962.9114993438322" cy="749.9417322834646" r="19" fill="transparent"></circle><circle cx="962.9114993438322" cy="749.9417322834646" r="19" fill="black" style="pointer-events: none;"></circle><circle cx="962.9114993438322" cy="749.9417322834646" r="19" fill="#4FC3F7" fill-opacity="0.35" stroke="#4FC3F7" stroke-width="2.5" style="pointer-events: none;"></circle><circle cx="962.9114993438322" cy="749.9417322834646" r="11.4" fill="none" stroke="#4FC3F7" stroke-opacity="0.3" stroke-width="1.5" style="pointer-events: none;"></circle><image data-oxm="116" x="945.4314993438322" y="732.4617322834646" width="34.96" height="34.96" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="962.9114993438322" y="783.9417322834646" text-anchor="middle" fill="white" font-size="14" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="3" paint-order="stroke">Fracas de flammes</tspan></text></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786492647636-7"><g style="cursor: pointer;"><circle cx="1047.7660925196853" cy="736.0624671916011" r="13" fill="transparent"></circle><circle cx="1047.7660925196853" cy="736.0624671916011" r="13" fill="black" style="pointer-events: none;"></circle><circle cx="1047.7660925196853" cy="736.0624671916011" r="13" fill="#4FC3F7" fill-opacity="0.35" stroke="#4FC3F7" stroke-width="2.5" style="pointer-events: none;"></circle><circle cx="1047.7660925196853" cy="736.0624671916011" r="7.8" fill="none" stroke="#4FC3F7" stroke-opacity="0.3" stroke-width="1.5" style="pointer-events: none;"></circle><image data-oxm="116" x="1035.8060925196853" y="724.102467191601" width="23.92" height="23.92" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786492664553-8"><g style="cursor: pointer;"><circle cx="853.8427329396327" cy="736.7028871391077" r="13" fill="transparent"></circle><circle cx="853.8427329396327" cy="736.7028871391077" r="13" fill="black" style="pointer-events: none;"></circle><circle cx="853.8427329396327" cy="736.7028871391077" r="13" fill="#4FC3F7" fill-opacity="0.35" stroke="#4FC3F7" stroke-width="2.5" style="pointer-events: none;"></circle><circle cx="853.8427329396327" cy="736.7028871391077" r="7.8" fill="none" stroke="#4FC3F7" stroke-opacity="0.3" stroke-width="1.5" style="pointer-events: none;"></circle><image data-oxm="116" x="841.8827329396327" y="724.7428871391077" width="23.92" height="23.92" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786492677598-9"><g style="cursor: pointer;"><circle cx="1124.5492946194227" cy="691.8482939632546" r="13" fill="transparent"></circle><circle cx="1124.5492946194227" cy="691.8482939632546" r="13" fill="black" style="pointer-events: none;"></circle><circle cx="1124.5492946194227" cy="691.8482939632546" r="13" fill="#4FC3F7" fill-opacity="0.35" stroke="#4FC3F7" stroke-width="2.5" style="pointer-events: none;"></circle><circle cx="1124.5492946194227" cy="691.8482939632546" r="7.8" fill="none" stroke="#4FC3F7" stroke-opacity="0.3" stroke-width="1.5" style="pointer-events: none;"></circle><image data-oxm="116" x="1112.5892946194226" y="679.8882939632546" width="23.92" height="23.92" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786492697130-10"><g style="cursor: pointer;"><circle cx="777.3723917322839" cy="697.0157480314961" r="13" fill="transparent"></circle><circle cx="777.3723917322839" cy="697.0157480314961" r="13" fill="black" style="pointer-events: none;"></circle><circle cx="777.3723917322839" cy="697.0157480314961" r="13" fill="#4FC3F7" fill-opacity="0.35" stroke="#4FC3F7" stroke-width="2.5" style="pointer-events: none;"></circle><circle cx="777.3723917322839" cy="697.0157480314961" r="7.8" fill="none" stroke="#4FC3F7" stroke-opacity="0.3" stroke-width="1.5" style="pointer-events: none;"></circle><image data-oxm="116" x="765.4123917322838" y="685.055748031496" width="23.92" height="23.92" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786492703978-11"><g style="cursor: pointer;"><g><text x="907.7366961942255" y="736.3900262467192" fill="#FFFFFF" font-size="26" font-weight="600" font-family="Arial, sans-serif"><tspan x="907.7366961942255" y="736.3900262467192" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Avancez sur</tspan></text></g></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786492772177-12"><g style="cursor: pointer;"><g><text x="743.1802657480314" y="439.22047244094506" fill="#FFFFFF" font-size="26" font-weight="600" font-family="Arial, sans-serif"><tspan x="743.1802657480314" y="439.22047244094506" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Amenez le Parasite sur Illidan, puis écartez-vous.</tspan></text></g></g></g><g data-tutorial-element="player" data-tutorial-id="el-1786492779088-13"><g transform="translate(1128.435908792651, 587.3212598425197)" style="cursor: pointer;"><circle cx="0" cy="0" r="11" fill="transparent"></circle><image data-oxm="9" x="-11" y="-11" width="22" height="22" style="pointer-events: none;"></image></g></g><g data-tutorial-element="player" data-tutorial-id="el-1786492794132-14"><g transform="translate(939.6800032808405, 491.49133858267714)" style="cursor: pointer;"><circle cx="0" cy="0" r="18" fill="transparent"></circle><image data-oxm="35" x="-18" y="-18" width="36" height="36" style="pointer-events: none;"></image></g></g><g data-tutorial-element="player" data-tutorial-id="el-1786492797212-15"><g transform="translate(962.911499343832, 491.49133858267714)" style="cursor: pointer;"><circle cx="0" cy="0" r="18" fill="transparent"></circle><image data-oxm="34" x="-18" y="-18" width="36" height="36" style="pointer-events: none;"></image></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786492829233-16"><g style="cursor: pointer;"><g><text x="472.7865649606299" y="129.13963254593182" fill="#FFFFFF" font-size="26" font-weight="600" font-family="Arial, sans-serif"><tspan x="472.7865649606299" y="129.13963254593182" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">P1 + P3 + P5</tspan></text></g></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786492956401-17"><g style="cursor: pointer;"><circle cx="718.9660925196852" cy="436.30183727034125" r="19" fill="transparent"></circle><circle cx="718.9660925196852" cy="436.30183727034125" r="19" fill="black" style="pointer-events: none;"></circle><circle cx="718.9660925196852" cy="436.30183727034125" r="19" fill="#8B5CF6" fill-opacity="0.35" stroke="#8B5CF6" stroke-width="2.5" style="pointer-events: none;"></circle><circle cx="718.9660925196852" cy="436.30183727034125" r="11.4" fill="none" stroke="#8B5CF6" stroke-opacity="0.3" stroke-width="1.5" style="pointer-events: none;"></circle><image data-oxm="31" x="701.4860925196851" y="418.82183727034123" width="34.96" height="34.96" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786492975541-18"><g style="cursor: pointer;"><g><text x="743.8206856955376" y="453.4125984251971" fill="#00FF00" font-size="14" font-weight="600" font-family="Arial, sans-serif"><tspan x="743.8206856955376" y="453.4125984251971" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Totem de lien terrestre ou piège givrant sous le boss.</tspan></text></g></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493020388-19"><g style="cursor: pointer;"><line x1="987" y1="518" x2="1085" y2="599" stroke="transparent" stroke-width="12"></line><line x1="987" y1="518" x2="1076.9896756999933" y2="592.3792217520353" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1085,599 1073.1671675962862,597.0039846429404 1080.8121838037005,587.7544588611303" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="player" data-tutorial-id="el-1786493104903-21"><g transform="translate(1190.38656496063, 697.6708661417322)" style="cursor: pointer;"><circle cx="0" cy="0" r="26" fill="transparent"></circle><circle cx="0" cy="0" r="26" fill="rgba(0,0,0,0.5)" stroke="#C69B6D" stroke-width="2.5" style="pointer-events: none;"></circle><image data-oxm="3" x="-26" y="-26" width="52" height="52" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><circle cx="17.9" cy="-17.9" r="10.1" fill="rgba(0,0,0,0.7)" stroke="rgba(255,255,255,0.3)" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="47" x="8.799999999999999" y="-27" width="18.2" height="18.2" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="47" text-anchor="middle" fill="#C69B6D" font-size="20" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="3" paint-order="stroke">Kastorar</tspan></text></g></g><g data-tutorial-element="boss" data-tutorial-id="el-1786492536276-1"><g style="cursor: pointer;"><circle cx="1134.243782808399" cy="636.6881889763779" r="65.19999999999999" fill="transparent"></circle><image data-oxm="117" x="1087.3237828083988" y="589.7681889763779" width="93.84" height="93.84" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><path d="M 1182.097 644.267 C 1190.258 645.560 1171.778 674.938 1181.292 685.408 C 1171.160 675.535 1141.155 692.977 1140.148 684.777 A 48.449999999999996 48.449999999999996 0 0 0 1182.097 644.267 Z" fill="#DC2626" stroke="rgba(0,0,0,0.9)" stroke-width="0.459" stroke-linejoin="round" style="filter: drop-shadow(rgba(0, 0, 0, 0.92) 0px 0px 1.65px) drop-shadow(rgba(220, 38, 38, 0.55) 0px 0px 5.05px); pointer-events: none;"></path></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786493249376-22"><g style="cursor: pointer;"><circle cx="1387.5120242782157" cy="128.15695538057736" r="19" fill="transparent"></circle><circle cx="1387.5120242782157" cy="128.15695538057736" r="19" fill="black" style="pointer-events: none;"></circle><circle cx="1387.5120242782157" cy="128.15695538057736" r="19" fill="#8877fd" fill-opacity="0.35" stroke="#8877fd" stroke-width="2.5" style="pointer-events: none;"></circle><circle cx="1387.5120242782157" cy="128.15695538057736" r="11.4" fill="none" stroke="#8877fd" stroke-opacity="0.3" stroke-width="1.5" style="pointer-events: none;"></circle><image data-oxm="118" x="1370.0320242782157" y="110.67695538057735" width="34.96" height="34.96" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786493279310-23"><g style="cursor: pointer;"><g><text x="1359.4553313648291" y="133.97952755905533" text-anchor="end" fill="#FFFFFF" font-size="26" font-weight="600" font-family="Arial, sans-serif"><tspan x="1359.4553313648291" y="133.97952755905533" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Aspiration d'âme - frontal</tspan></text></g></g></g><g data-tutorial-element="player" data-tutorial-id="el-1786493286418-24"><g transform="translate(1398.5020505249342, 114.9475065616798)" style="cursor: pointer;"><circle cx="0" cy="0" r="10" fill="transparent"></circle><image data-oxm="44" x="-10" y="-10" width="20" height="20" style="pointer-events: none;"></image></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786493310819-25"><g style="cursor: pointer;"><g><text x="1363.9676673228341" y="146.235695538058" text-anchor="end" fill="#FF0000" font-size="14" font-weight="600" font-family="Arial, sans-serif"><tspan x="1363.9676673228341" y="146.235695538058" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Ne tournez jamais Illidan vers le raid ou un autre joueur.</tspan></text></g></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786495329120-71"><g style="cursor: pointer;"><g><text x="945.8007381889763" y="849.9564304461946" text-anchor="middle" fill="#FFFFFF" font-size="26" font-weight="600" font-family="Arial, sans-serif"><tspan x="945.8007381889763" y="849.9564304461946" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Jouez P3 et P5 comme la P1, mais avec le raid écarté.</tspan></text></g></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786496508518-80"><g style="cursor: pointer;"><circle cx="744.1482447506561" cy="138.17900262467197" r="13" fill="transparent"></circle><circle cx="744.1482447506561" cy="138.17900262467197" r="13" fill="black" style="pointer-events: none;"></circle><circle cx="744.1482447506561" cy="138.17900262467197" r="13" fill="#FF8C00" fill-opacity="0.35" stroke="#FF8C00" stroke-width="2.5" style="pointer-events: none;"></circle><circle cx="744.1482447506561" cy="138.17900262467197" r="7.8" fill="none" stroke="#FF8C00" stroke-opacity="0.3" stroke-width="1.5" style="pointer-events: none;"></circle><image data-oxm="119" x="732.188244750656" y="126.21900262467196" width="23.92" height="23.92" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786496544787-81"><g style="cursor: pointer;"><g><text x="474.3949639107602" y="144.2997375328086" fill="#00FF00" font-size="14" font-weight="600" font-family="Arial, sans-serif"><tspan x="474.3949639107602" y="144.2997375328086" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Furie sanguinaire en P3, vous pouvez sauter la P4.</tspan></text></g></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786496899825-83"><g style="cursor: pointer;"><g><text x="1363.6401082677155" y="160.42782152230984" text-anchor="end" fill="#00FF00" font-size="14" font-weight="600" font-family="Arial, sans-serif"><tspan x="1363.6401082677155" y="160.42782152230984" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">En P5, surveillez le timer d'Aspiration d'âme avant d'amener Illidan sur le piège.</tspan></text></g></g></g><g data-tutorial-element="text" data-tutorial-id="el-1788099614890-il1"><g style="cursor: pointer;"><g><text x="480" y="800" fill="#FFD966" font-size="22" font-weight="600" font-family="Arial, sans-serif"><tspan x="480" y="800" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">P5 : full DPS mais ATTENTION à l’aggro — amenez Illidan sur les pièges.</tspan></text></g></g></g></svg></div>
 <div class="carte" id="carte-14" hidden><svg data-tutorial="map-canvas-dropzone" viewBox="441 71 1009 803" class="w-full h-full " preserveAspectRatio="xMidYMid slice" style="background-color: rgb(17, 17, 17); cursor: default; user-select: none;"><image data-oxm="115" x="0" y="0" width="1920" height="922" preserveAspectRatio="none" data-background="true"></image><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"></path></pattern></defs><g data-tutorial-element="text" data-tutorial-id="el-1786492829233-16"><g style="cursor: pointer;"><g><text x="472.7865649606299" y="129.13963254593182" fill="#FFFFFF" font-size="26" font-weight="600" font-family="Arial, sans-serif"><tspan x="472.7865649606299" y="129.13963254593182" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">P2</tspan></text></g></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786493470220-26"><g style="cursor: pointer;"><circle cx="1073.2611056430446" cy="441.15643044619424" r="48" fill="transparent"></circle><image data-oxm="120" x="1029.1011056430445" y="396.9964304461942" width="88.32000000000001" height="88.32000000000001" preserveAspectRatio="xMidYMid slice" transform="translate(2146.5222112860893, 0) scale(-1, 1)" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image></g></g><g data-tutorial-element="add" data-tutorial-id="el-1786493494967-27"><g style="cursor: pointer;"><circle cx="836.746669947506" cy="442.76482939632547" r="48" fill="transparent"></circle><image data-oxm="120" x="792.586669947506" y="398.60482939632544" width="88.32000000000001" height="88.32000000000001" preserveAspectRatio="xMidYMid slice" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493533419-28"><g style="cursor: pointer;"><line x1="836.0566929133859" y1="494.7758530183728" x2="853" y2="526" stroke="transparent" stroke-width="12"></line><line x1="836.0566929133859" y1="494.7758530183728" x2="848.0434850168856" y2="516.8658356035069" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="853,526 842.769872743748,519.7274808632503 853.3170972900232,514.0041903437634" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493546571-29"><g style="cursor: pointer;"><line x1="859" y1="535" x2="874" y2="554" stroke="transparent" stroke-width="12"></line><line x1="859" y1="535" x2="867.5604676573676" y2="545.8432590326656" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="874,554 862.851171064167,549.5611247641398 872.2697642505682,542.1253933011915" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493568075-30"><g style="cursor: pointer;"><line x1="807" y1="552" x2="788" y2="525" stroke="transparent" stroke-width="12"></line><line x1="807" y1="552" x2="793.9807029134918" y2="533.4988936139094" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="788,525 798.8875414292964,530.0459331768617 789.0738643976872,536.9518540509571" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493574240-31"><g style="cursor: pointer;"><line x1="788.9359580052496" y1="510" x2="784" y2="477" stroke="transparent" stroke-width="12"></line><line x1="788.9359580052496" y1="510" x2="785.5373218813029" y2="487.2779687406251" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="784,477 791.4713099004254,486.3903955386238 779.6033338621804,488.1655419426264" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493586079-32"><g style="cursor: pointer;"><line x1="787.6404199475066" y1="461.2734908136482" x2="787.6404199475066" y2="426.3055118110235" stroke="transparent" stroke-width="12"></line><line x1="787.6404199475066" y1="461.2734908136482" x2="787.6404199475066" y2="436.69781665643677" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="787.6404199475066,426.3055118110235 793.6404199475066,436.69781665643677 781.6404199475066,436.69781665643677" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493602852-33"><g style="cursor: pointer;"><line x1="788.2808398950133" y1="413.5149606299211" x2="794" y2="376" stroke="transparent" stroke-width="12"></line><line x1="788.2808398950133" y1="413.5149606299211" x2="792.433787583824" y2="386.27360592330734" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="794,376 798.3652567291937,387.1778590833947 786.5023184384544,385.36935276322004" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493608888-34"><g style="cursor: pointer;"><line x1="799" y1="366" x2="817" y2="332" stroke="transparent" stroke-width="12"></line><line x1="799" y1="366" x2="812.1375681759799" y2="341.18459344537126" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="817,332 817.4402956740623,343.99191976788546 806.8348406778975,338.37726712285706" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493617073-35"><g style="cursor: pointer;"><line x1="827.679790026247" y1="323.8572178477691" x2="852" y2="304" stroke="transparent" stroke-width="12"></line><line x1="827.679790026247" y1="323.8572178477691" x2="843.950130886113" y2="310.57264081243517" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="852,304 847.7448468284592,315.22023491227907 840.1554149437668,305.92504671259127" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493629264-36"><g style="cursor: pointer;"><line x1="866.9679790026248" y1="295.16010498687666" x2="902.9679790026248" y2="291.06404199475065" stroke="transparent" stroke-width="12"></line><line x1="866.9679790026248" y1="295.16010498687666" x2="892.6422962450982" y2="292.2388933006267" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="902.9679790026248,291.06404199475065 893.3205969628036,298.20042902025136 891.963995527393,286.2773575810021" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493649438-38"><g style="cursor: pointer;"><line x1="906.903937007874" y1="301.93595800524935" x2="900.903937007874" y2="328.93595800524935" stroke="transparent" stroke-width="12"></line><line x1="906.903937007874" y1="301.93595800524935" x2="903.1583444557805" y2="318.7911244896699" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="900.903937007874,328.93595800524935 897.3012220946769,317.489541742758 909.0154668168842,320.0927072365819" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493708431-39"><g style="cursor: pointer;"><line x1="890.2414698162734" y1="331.48766404199495" x2="866" y2="352" stroke="transparent" stroke-width="12"></line><line x1="890.2414698162734" y1="331.48766404199495" x2="873.9332908625568" y2="345.2871097066856" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="866,352 870.0576018446712,340.7068220916289 877.8089798804422,349.8673973217423" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493712691-40"><g style="cursor: pointer;"><line x1="861" y1="362" x2="842" y2="386" stroke="transparent" stroke-width="12"></line><line x1="861" y1="362" x2="848.4505342162925" y2="377.85195677942" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="842,386 843.7462592695219,374.12773911322665 853.1548091630631,381.5761744456134" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493739040-41"><g style="cursor: pointer;"><line x1="860" y1="564" x2="817.903937007874" y2="562.0320209973752" stroke="transparent" stroke-width="12"></line><line x1="860" y1="564" x2="828.2849040562272" y2="562.517328261903" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="817.903937007874,562.0320209973752 828.5650963360421,556.5238741420876 828.0047117764125,568.5107823817184" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493780047-42"><g style="cursor: pointer;"><line x1="1063.2041994750657" y1="491.54435695538064" x2="1047.0640419947508" y2="520.8719160104987" stroke="transparent" stroke-width="12"></line><line x1="1063.2041994750657" y1="491.54435695538064" x2="1052.0746718357939" y2="511.767324388902" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1047.0640419947508,520.8719160104987 1046.8181334122035,508.8744359013662 1057.3312102593843,514.6602128764378" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493860582-43"><g style="cursor: pointer;"><line x1="1039.6451443569554" y1="528.9679790026247" x2="1020.096062992126" y2="552.903937007874" stroke="transparent" stroke-width="12"></line><line x1="1039.6451443569554" y1="528.9679790026247" x2="1026.66983392853" y2="544.8549907615824" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1020.096062992126,552.903937007874 1022.0227726465406,541.0596223418587 1031.316895210519,548.6503591813062" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493867160-44"><g style="cursor: pointer;"><line x1="1034.8766404199475" y1="556.8965879265091" x2="1074" y2="559" stroke="transparent" stroke-width="12"></line><line x1="1034.8766404199475" y1="556.8965879265091" x2="1063.6226822704866" y2="558.4420781947919" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1074,559 1063.300565966063,564.4334253793927 1063.9447985749102,552.450731010191" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493879744-45"><g style="cursor: pointer;"><line x1="1086" y1="559" x2="1109" y2="534" stroke="transparent" stroke-width="12"></line><line x1="1086" y1="559" x2="1101.9638221341315" y2="541.6480194194223" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1109,534 1106.3794082047025,545.7103586043477 1097.5482360635604,537.5856802344971" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493888345-46"><g style="cursor: pointer;"><line x1="1113.7438320209974" y1="516.0813648293964" x2="1127" y2="480" stroke="transparent" stroke-width="12"></line><line x1="1113.7438320209974" y1="516.0813648293964" x2="1123.4161256423197" y2="489.7547857274448" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1127,480 1129.0480538079469,491.8239365525934 1117.7841974766923,487.6856349022962" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493892613-47"><g style="cursor: pointer;"><line x1="1127.9359580052494" y1="465.41889763779534" x2="1124" y2="420" stroke="transparent" stroke-width="12"></line><line x1="1127.9359580052494" y1="465.41889763779534" x2="1124.8972244653764" y2="430.3535012560356" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1124,420 1130.8748212026037,429.83548846942705 1118.919627728149,430.8715140426441" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493896254-48"><g style="cursor: pointer;"><line x1="1121.9359580052492" y1="408" x2="1106.9359580052492" y2="374" stroke="transparent" stroke-width="12"></line><line x1="1121.9359580052492" y1="408" x2="1111.1307100798556" y2="383.50810470244124" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1106.9359580052492,374 1116.6202168892933,381.0862634629835 1105.641203270418,385.929945941899" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493902650-49"><g style="cursor: pointer;"><line x1="1103" y1="363" x2="1077" y2="322" stroke="transparent" stroke-width="12"></line><line x1="1103" y1="363" x2="1082.565515985054" y2="330.77639059181564" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1077,322 1087.632567455752,327.56313843966564 1077.4984645143559,333.98964274396565" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493921812-50"><g style="cursor: pointer;"><line x1="1067" y1="308" x2="1028.192125984252" y2="296.096062992126" stroke="transparent" stroke-width="12"></line><line x1="1067" y1="308" x2="1038.1275278141795" y2="299.14365064104953" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1028.192125984252,296.096062992126 1039.8870533636646,293.40744372003377 1036.3680022646947,304.87985756206535" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493929107-51"><g style="cursor: pointer;"><line x1="1020" y1="306" x2="1021" y2="333" stroke="transparent" stroke-width="12"></line><line x1="1020" y1="306" x2="1020.6153635411464" y2="322.6148156109523" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1021,333 1014.6194745385458,322.83688557401155 1026.611252543747,322.392745647893" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493935877-52"><g style="cursor: pointer;"><line x1="1023.320209973753" y1="346.288188976378" x2="1041" y2="372" stroke="transparent" stroke-width="12"></line><line x1="1023.320209973753" y1="346.288188976378" x2="1035.111799428793" y2="363.43675913959936" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1041,372 1030.167810012905,366.8363133244283 1040.0557888446808,360.03720495477035" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786493956694-53"><g style="cursor: pointer;"><line x1="1046.2241469816272" y1="385.6477690288715" x2="1061" y2="414" stroke="transparent" stroke-width="12"></line><line x1="1046.2241469816272" y1="385.6477690288715" x2="1056.1971187605002" y2="404.78412609682294" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="1061,414 1050.876331481683,407.55707087333406 1061.517906039317,402.0111813203119" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="area" data-tutorial-id="el-1786493974598-54"><g style="cursor: pointer;"><g><ellipse cx="953.3028871391075" cy="396.03937007874015" rx="20" ry="20" fill="#44FF88" fill-opacity="0.8" stroke="#44FF88" stroke-width="1"></ellipse></g><text x="953.3028871391075" y="397.03937007874015" text-anchor="middle" dominant-baseline="central" fill="white" font-size="20" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="3" paint-order="stroke">2</tspan></text></g></g><g data-tutorial-element="area" data-tutorial-id="el-1786493991371-55"><g style="cursor: pointer;"><g><ellipse cx="900.7044619422572" cy="475.0860892388449" rx="20" ry="20" fill="#44FF88" fill-opacity="0.8" stroke="#44FF88" stroke-width="1"></ellipse></g><text x="900.7044619422572" y="476.0860892388449" text-anchor="middle" dominant-baseline="central" fill="white" font-size="19" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="3" paint-order="stroke">3</tspan></text></g></g><g data-tutorial-element="area" data-tutorial-id="el-1786493995759-56"><g style="cursor: pointer;"><g><ellipse cx="1009.7585301837273" cy="474.758530183727" rx="20" ry="20" fill="#44FF88" fill-opacity="0.8" stroke="#44FF88" stroke-width="1"></ellipse></g><text x="1009.7585301837273" y="475.758530183727" text-anchor="middle" dominant-baseline="central" fill="white" font-size="20" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="3" paint-order="stroke">1</tspan></text></g></g><g data-tutorial-element="roster_group" data-tutorial-id="el-1786494122094-57"><g transform="translate(1429.477378608924, 654.4570078740153)" style="cursor: pointer;"><rect x="-138.52800000000002" y="0" width="138.52800000000002" height="202.56000000000003" fill="transparent"></rect><text x="-75.864" y="25.4" text-anchor="start" fill="white" font-size="24" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">1</tspan></text><g><circle cx="-16.880000000000003" cy="183.68" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#3FC7EB" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="11" x="-28.760000000000005" y="171.8" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="183.68" text-anchor="end" dominant-baseline="central" fill="#3FC7EB" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Chewb</tspan></text></g><g><circle cx="-16.880000000000003" cy="155.92000000000002" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#3FC7EB" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="11" x="-28.760000000000005" y="144.04000000000002" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="155.92000000000002" text-anchor="end" dominant-baseline="central" fill="#3FC7EB" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Jetx</tspan></text></g><g><circle cx="-16.880000000000003" cy="128.16000000000003" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#3FC7EB" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="11" x="-28.760000000000005" y="116.28000000000003" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="128.16000000000003" text-anchor="end" dominant-baseline="central" fill="#3FC7EB" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Dwa</tspan></text></g><g><circle cx="-16.880000000000003" cy="100.4" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#FFFFFF" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="12" x="-28.760000000000005" y="88.52000000000001" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="100.4" text-anchor="end" dominant-baseline="central" fill="#FFFFFF" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Tothore</tspan></text></g><g><circle cx="-16.880000000000003" cy="72.64000000000001" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#0070DD" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="10" x="-28.760000000000005" y="60.76000000000001" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="72.64000000000001" text-anchor="end" dominant-baseline="central" fill="#0070DD" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Tafoi</tspan></text></g><g><circle cx="-16.880000000000003" cy="44.88" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#C69B6D" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="3" x="-28.760000000000005" y="33" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="44.88" text-anchor="end" dominant-baseline="central" fill="#C69B6D" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Kastorar</tspan></text></g></g></g><g data-tutorial-element="roster_group" data-tutorial-id="el-1786494436005-63"><g transform="translate(1019.6947014435693, 681.8894488188973)" style="cursor: pointer;"><rect x="-138.52800000000002" y="0" width="138.52800000000002" height="174.8" fill="transparent"></rect><text x="-75.864" y="25.4" text-anchor="start" fill="white" font-size="24" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">2</tspan></text><g><circle cx="-16.880000000000003" cy="155.92000000000002" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#AAD372" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="18" x="-28.760000000000005" y="144.04000000000002" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="155.92000000000002" text-anchor="end" dominant-baseline="central" fill="#AAD372" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Drexterr</tspan></text></g><g><circle cx="-16.880000000000003" cy="128.16000000000003" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#AAD372" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="19" x="-28.760000000000005" y="116.28000000000003" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="128.16000000000003" text-anchor="end" dominant-baseline="central" fill="#AAD372" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Garønaze</tspan></text></g><g><circle cx="-16.880000000000003" cy="100.4" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#FFFFFF" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="17" x="-28.760000000000005" y="88.52000000000001" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="100.4" text-anchor="end" dominant-baseline="central" fill="#FFFFFF" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Shanthy</tspan></text></g><g><circle cx="-16.880000000000003" cy="72.64000000000001" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#F48CBA" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="20" x="-28.760000000000005" y="60.76000000000001" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="72.64000000000001" text-anchor="end" dominant-baseline="central" fill="#F48CBA" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Meisinga</tspan></text></g><g><circle cx="-16.880000000000003" cy="44.88" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#0070DD" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="10" x="-28.760000000000005" y="33" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-31.760000000000005" y="44.88" text-anchor="end" dominant-baseline="central" fill="#0070DD" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Bartonfu</tspan></text></g></g></g><g data-tutorial-element="roster_group" data-tutorial-id="el-1786494447750-64"><g transform="translate(462.77921587926517, 679.6259317585299)" style="cursor: pointer;"><rect x="0" y="0" width="126.43200000000002" height="174.8" fill="transparent"></rect><text x="56.61600000000001" y="25.4" text-anchor="start" fill="white" font-size="24" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">3</tspan></text><g><circle cx="16.880000000000003" cy="155.92000000000002" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#F48CBA" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="14" x="5" y="144.04000000000002" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="31.760000000000005" y="155.92000000000002" text-anchor="start" dominant-baseline="central" fill="#F48CBA" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Yunarïa</tspan></text></g><g><circle cx="16.880000000000003" cy="128.16000000000003" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#8788EE" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="15" x="5" y="116.28000000000003" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="31.760000000000005" y="128.16000000000003" text-anchor="start" dominant-baseline="central" fill="#8788EE" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Dévill</tspan></text></g><g><circle cx="16.880000000000003" cy="100.4" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#8788EE" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="15" x="5" y="88.52000000000001" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="31.760000000000005" y="100.4" text-anchor="start" dominant-baseline="central" fill="#8788EE" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Impies</tspan></text></g><g><circle cx="16.880000000000003" cy="72.64000000000001" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#FF7C0A" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="13" x="5" y="60.76000000000001" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="31.760000000000005" y="72.64000000000001" text-anchor="start" dominant-baseline="central" fill="#FF7C0A" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Atzana</tspan></text></g><g><circle cx="16.880000000000003" cy="44.88" r="11.880000000000003" fill="rgba(0,0,0,0.4)" stroke="#FF7C0A" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="16" x="5" y="33" width="23.760000000000005" height="23.760000000000005" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="31.760000000000005" y="44.88" text-anchor="start" dominant-baseline="central" fill="#FF7C0A" font-size="21.6" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Malstep</tspan></text></g></g></g><g data-tutorial-element="player" data-tutorial-id="el-1786494654269-65"><g transform="translate(828.3624179790024, 483.74750656167987)" style="cursor: pointer;"><circle cx="0" cy="0" r="26" fill="transparent"></circle><circle cx="0" cy="0" r="26" fill="rgba(0,0,0,0.5)" stroke="#FF7C0A" stroke-width="2.5" style="pointer-events: none;"></circle><image data-oxm="6" x="-26" y="-26" width="52" height="52" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><circle cx="17.9" cy="-17.9" r="10.1" fill="rgba(0,0,0,0.7)" stroke="rgba(255,255,255,0.3)" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="47" x="8.799999999999999" y="-27" width="18.2" height="18.2" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><circle cx="0" cy="0" r="28" fill="none" stroke="#FFD700" stroke-width="2.86" stroke-opacity="0.9" style="pointer-events: none;"></circle><g style="pointer-events: none;"><defs><filter id="you-chip-rbr" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="0.5" stdDeviation="0.5" flood-color="black" flood-opacity="0.6"></feDropShadow></filter></defs><g filter="url(#you-chip-rbr)"><rect x="-78.5" y="-11.25" width="46.5" height="22.5" rx="11.25" fill="rgba(8,8,8,0.85)" stroke="#FFD700" stroke-width="1" stroke-opacity="0.9"></rect><text x="-55.25" y="0" text-anchor="middle" dominant-baseline="central" fill="#FFD700" font-size="15" font-weight="700" letter-spacing="0.6" font-family="Arial, sans-serif">Henzø</text></g></g></g></g><g data-tutorial-element="player" data-tutorial-id="el-1786494668343-66"><g transform="translate(1067.125672572178, 484.3879265091864)" style="cursor: pointer;"><circle cx="0" cy="0" r="26" fill="transparent"></circle><circle cx="0" cy="0" r="26" fill="rgba(0,0,0,0.5)" stroke="#FF7C0A" stroke-width="2.5" style="pointer-events: none;"></circle><image data-oxm="7" x="-26" y="-26" width="52" height="52" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><circle cx="17.9" cy="-17.9" r="10.1" fill="rgba(0,0,0,0.7)" stroke="rgba(255,255,255,0.3)" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="47" x="8.799999999999999" y="-27" width="18.2" height="18.2" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="32" y="0" text-anchor="start" dominant-baseline="central" fill="#FF7C0A" font-size="20" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="3" paint-order="stroke">Khanyzz</tspan></text></g></g><g data-tutorial-element="text" data-tutorial-id="el-1788195152567-p2a"><g style="cursor: pointer;"><g><text x="1050" y="130" fill="#FFFFFF" font-size="20" font-weight="600" font-family="Arial, sans-serif"><tspan x="1050" y="130" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Heals Flamme 1 : Meisinga + Shanthy</tspan></text></g></g></g><g data-tutorial-element="text" data-tutorial-id="el-1788195152567-p2b"><g style="cursor: pointer;"><g><text x="1050" y="156" fill="#FFFFFF" font-size="20" font-weight="600" font-family="Arial, sans-serif"><tspan x="1050" y="156" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Heals Flamme 2 : Atzana + Tafoi</tspan></text></g></g></g></svg></div>
 <div class="carte" id="carte-15" hidden><svg data-tutorial="map-canvas-dropzone" viewBox="441 71 1009 803" class="w-full h-full " preserveAspectRatio="xMidYMid slice" style="background-color: rgb(17, 17, 17); cursor: default; user-select: none;"><image data-oxm="115" x="0" y="0" width="1920" height="922" preserveAspectRatio="none" data-background="true"></image><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"></path></pattern></defs><g data-tutorial-element="area" data-tutorial-id="el-1786495598352-73"><g style="cursor: pointer;"><g><ellipse cx="948.0960629921258" cy="760.893963254593" rx="100" ry="100" fill="#8788EE" fill-opacity="0.25" stroke="#8788EE" stroke-width="1"></ellipse></g></g></g><g data-tutorial-element="boss" data-tutorial-id="el-1786492536276-1"><g style="cursor: pointer;"><circle cx="949.3597933070869" cy="762.5254593175852" r="86.8" fill="transparent"></circle><image data-oxm="117" x="885.8797933070869" y="699.0454593175851" width="126.96000000000001" height="126.96000000000001" preserveAspectRatio="xMidYMid slice" transform="translate(1898.7195866141737, 0) scale(-1, 1)" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><path d="M 886.349 780.593 C 875.604 783.675 881.466 737.086 863.814 729.687 C 881.882 736.000 908.700 697.456 914.624 706.936 A 65.55 65.55 0 0 0 886.349 780.593 Z" fill="#DC2626" stroke="rgba(0,0,0,0.9)" stroke-width="0.621" stroke-linejoin="round" style="filter: drop-shadow(rgba(0, 0, 0, 0.92) 0px 0px 2.24px) drop-shadow(rgba(220, 38, 38, 0.55) 0px 0px 6.83px); pointer-events: none;"></path></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786492829233-16"><g style="cursor: pointer;"><g><text x="472.7865649606299" y="128.17165354330712" fill="#FFFFFF" font-size="26" font-weight="600" font-family="Arial, sans-serif"><tspan x="472.7865649606299" y="128.17165354330712" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">P4</tspan></text></g></g></g><g data-tutorial-element="player" data-tutorial-id="el-1786495467693-72"><g transform="translate(685.1015255905518, 689.9270341207349)" style="cursor: pointer;"><circle cx="0" cy="0" r="26" fill="transparent"></circle><circle cx="0" cy="0" r="26" fill="rgba(0,0,0,0.5)" stroke="#8788EE" stroke-width="2.5" style="pointer-events: none;"></circle><image data-oxm="15" x="-26" y="-26" width="52" height="52" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><circle cx="17.9" cy="-17.9" r="10.1" fill="rgba(0,0,0,0.7)" stroke="rgba(255,255,255,0.3)" stroke-width="1" style="pointer-events: none;"></circle><image data-oxm="47" x="8.799999999999999" y="-27" width="18.2" height="18.2" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="-32" y="0" text-anchor="end" dominant-baseline="central" fill="#8788EE" font-size="20" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="3" paint-order="stroke">Impies</tspan></text></g></g><g data-tutorial-element="roster_group" data-tutorial-id="el-1786495684790-74"><g transform="translate(964.8474573490812, 321.12703412073495)" style="cursor: pointer;"><g transform="translate(-119.06141732283527, 277.52650918635186)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#F48CBA" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="20" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#F48CBA" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Meisinga</tspan></text></g><g transform="translate(-43.31238310505003, 276.1540779478005)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#FF7C0A" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="13" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#FF7C0A" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Atzana</tspan></text></g><g transform="translate(26.01897475362692, 277.9264320705201)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#FFFFFF" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="17" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#FFFFFF" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Shanthy</tspan></text></g><g transform="translate(100.38975407319697, 294.0189447848402)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#0070DD" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="10" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#0070DD" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Bartonfu</tspan></text></g><g transform="translate(-152.65721784776883, 211.98740157480302)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#0070DD" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="10" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#0070DD" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Tafoi</tspan></text></g><g transform="translate(-73.84646639924438, 197.7143885484931)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#3FC7EB" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="11" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#3FC7EB" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Chewb</tspan></text></g><g transform="translate(-1.0844373198638095, 193.4793422076956)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#3FC7EB" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="11" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#3FC7EB" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Jetx</tspan></text></g><g transform="translate(141.57160639626204, 229.13096142227846)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#3FC7EB" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="11" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#3FC7EB" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Dwa</tspan></text></g><g transform="translate(167.74042965383674, 327.898209876704)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#FFFFFF" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="12" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#FFFFFF" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Tothore</tspan></text></g><g transform="translate(-106.7243623017743, 128.46114514931253)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#AAD372" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="18" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#AAD372" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Drexterr</tspan></text></g><g transform="translate(-34.73078577724981, 124.75283302134372)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#AAD372" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="19" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#AAD372" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Garønaze</tspan></text></g><g transform="translate(36.09528529688163, 128.98787936214154)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#8788EE" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="15" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#8788EE" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Dévill</tspan></text></g><g transform="translate(109.09816272965872, 141.3249343832022)"><circle r="22" cx="0" cy="0" fill="rgba(0,0,0,0.4)" stroke="#FF7C0A" stroke-width="2" style="cursor: pointer;"></circle><image data-oxm="16" x="-22" y="-22" width="44" height="44" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image><text x="0" y="36.5" text-anchor="middle" fill="#FF7C0A" font-size="13.5" font-weight="600" style="pointer-events: none;"><tspan stroke="black" stroke-width="2" paint-order="stroke">Malstep</tspan></text></g></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786496348864-78"><g style="cursor: pointer;"><g><text x="360" y="743.1658792650919" fill="#FFFFFF" font-size="26" font-weight="600" font-family="Arial, sans-serif"><tspan x="360" y="743.1658792650919" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Heal Impies : Atzana + Meisinga</tspan></text></g></g></g><g data-tutorial-element="arrow" data-tutorial-id="el-1786496355789-79"><g style="cursor: pointer;"><line x1="560.0640419947508" y1="727.2881889763779" x2="627.0640419947508" y2="707.2881889763779" stroke="transparent" stroke-width="12"></line><line x1="560.0640419947508" y1="727.2881889763779" x2="617.1059378988137" y2="710.2607573632248" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></line><polygon points="627.0640419947508,707.2881889763779 618.8221510571444,716.0100714436323 615.3897247404832,704.5114432828173" fill="#FFFFFF"></polygon></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786496858031-82"><g style="cursor: pointer;"><g><text x="474.39496391076113" y="139.45984251968503" fill="#00FF00" font-size="14" font-weight="600" font-family="Arial, sans-serif"><tspan x="474.39496391076113" y="139.45984251968503" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">On la sautera très probablement.</tspan></text></g></g></g><g data-tutorial-element="player" data-tutorial-id="el-1786543979004-2"><g transform="translate(1392.7923147445622, 125.68487607486085)" style="cursor: pointer;"><circle cx="0" cy="0" r="23" fill="transparent"></circle><image data-oxm="9" x="-23" y="-23" width="46" height="46" style="pointer-events: none;"></image></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786543983988-3"><g style="cursor: pointer;"><g><text x="1363.877797799696" y="130.34850784016172" text-anchor="end" fill="#FFFFFF" font-size="26" font-weight="600" font-family="Arial, sans-serif"><tspan x="1363.877797799696" y="130.34850784016172" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Aidez sur les adds, n'approchez pas d'Illidan.</tspan></text></g></g></g><g data-tutorial-element="text" data-tutorial-id="el-1786544034662-4"><g style="cursor: pointer;"><g><text x="1363.3578180323718" y="143.81942336874036" text-anchor="end" fill="#FF0000" font-size="14" font-weight="600" font-family="Arial, sans-serif"><tspan x="1363.3578180323718" y="143.81942336874036" stroke="rgba(0,0,0,0.8)" stroke-width="4" paint-order="stroke">Stun/ralentissez les adds, ne courez pas au milieu de tout le monde (dégâts de zone).</tspan></text></g></g></g></svg></div></div>
+
+  <section class="panel" id="import">
+    <h2>Importer la compo Raid-Helper</h2>
+    <p>Colle l'export du <b>Composition Tool</b> ou de l'événement raid-helper.dev
+    (JSON ou CSV), ou simplement le <b>lien de l'événement</b>, puis Importer :
+    les titulaires inscrits gardent leur poste et les nouveaux remplacent les
+    absents de même classe/rôle — les cartes ci-dessus s'adaptent aussitôt.</p>
+    <textarea id="imp-texte" placeholder="Export JSON/CSV du Composition Tool… ou https://raid-helper.dev/event/…"></textarea>
+    <div class="boutons">
+      <button class="btn" id="btn-analyser">⬇ Importer</button>
+      <button class="btn discret" id="btn-raz">↺ Réinitialiser</button>
+      
+      <div id="bilan"></div>
+    </div>
+    <div id="rapport"></div>
+  </section>
 </div>
 <dialog id="dlg">
   <h3>Export — remplacements.txt</h3>
-  <p>À envoyer tel quel à l’orga (Wartoto) sur Discord — sur son PC : coller dans <b>assignations\remplacements.txt</b> puis « Generer TEST.bat ».</p>
+  <p></p>
   <textarea id="dlg-texte" readonly></textarea><br><br>
   <button class="btn" id="btn-copier">Copier</button>
   <a id="btn-dl" class="btn discret" download="remplacements.txt">Télécharger</a>
   <button class="btn discret" id="btn-fermer" style="float:right">Fermer</button>
-</dialog>
-<dialog id="dlg-imp">
-  <h3>Import Raid-Helper</h3>
-  <p>Colle l'export de l'événement (JSON ou CSV de raid-helper.dev), ou juste le
-  <b>lien de l'événement</b>. Les inscrits connus reprennent leur poste, les
-  nouveaux remplacent les absents de même classe/rôle.</p>
-  <textarea id="imp-texte" placeholder="Export JSON/CSV… ou https://raid-helper.dev/event/…"></textarea>
-  <div id="rapport"></div>
-  <button class="btn" id="btn-analyser">Importer</button>
-  <button class="btn discret" id="btn-imp-fermer" style="float:right">Fermer</button>
 </dialog>
 <script>
 // Images embarquées (aucun chargement réseau) : pose les href des balises data-oxm.
@@ -141,62 +152,8 @@ document.querySelectorAll('[data-oxm]').forEach(function (e) {
   e.setAttribute('href', IMAGES[+e.getAttribute('data-oxm')]);
 });
 const POSTES = [{"defaut": "Henzø", "alias": ["Henzø", "Henzô"], "classe": "Druide", "cat": "tank", "role": "Féral — Tank 1 (MT)", "groupe": 1, "id": 0}, {"defaut": "Ithale", "alias": ["Ithale"], "classe": "Paladin", "cat": "cac", "role": "Vindicte — CaC", "groupe": 1, "id": 1}, {"defaut": "Kastorar", "alias": ["Kastorar", "Elleam"], "classe": "Guerrier", "cat": "tank", "role": "Protection — Tank 2", "groupe": 1, "id": 2}, {"defaut": "Faigrandmal", "alias": ["Faigrandmal"], "classe": "Voleur", "cat": "cac", "role": "CaC — interruptions", "groupe": 1, "id": 3}, {"defaut": "Rachelkéké", "alias": ["Rachelkéké"], "classe": "Chaman", "cat": "cac", "role": "Amélioration — CaC", "groupe": 1, "id": 4}, {"defaut": "Khanyzz", "alias": ["Khanyzz"], "classe": "Druide", "cat": "cac", "role": "Féral DPS — tank Frappe haineuse", "groupe": 2, "id": 5}, {"defaut": "Dïoz", "alias": ["Dïoz", "Dioz"], "classe": "Paladin", "cat": "cac", "role": "Vindicte — CaC", "groupe": 2, "id": 6}, {"defaut": "Grandetoto", "alias": ["Grandetoto"], "classe": "Guerrier", "cat": "cac", "role": "DPS — CaC", "groupe": 2, "id": 7}, {"defaut": "Markula", "alias": ["Markula"], "classe": "Voleur", "cat": "cac", "role": "CaC", "groupe": 2, "id": 8}, {"defaut": "Darar", "alias": ["Darar"], "classe": "Chaman", "cat": "cac", "role": "Amélioration — CaC, Séisme", "groupe": 2, "id": 9}, {"defaut": "Drexterr", "alias": ["Drexterr"], "classe": "Chasseur", "cat": "dist", "role": "Distance", "groupe": 3, "id": 10}, {"defaut": "Garønaze", "alias": ["Garønaze", "Garônaze"], "classe": "Chasseur", "cat": "dist", "role": "Distance", "groupe": 3, "id": 11}, {"defaut": "Shanthy", "alias": ["Shanthy"], "classe": "Prêtre", "cat": "heal", "role": "Sacré — heal raid + dispel", "groupe": 3, "id": 12}, {"defaut": "Meisinga", "alias": ["Meisinga"], "classe": "Paladin", "cat": "heal", "role": "Sacré — heal tanks", "groupe": 3, "id": 13}, {"defaut": "Bartonfunk", "alias": ["Bartonfunk"], "classe": "Chaman", "cat": "heal", "role": "Resto — salves CaC", "groupe": 3, "id": 14}, {"defaut": "Chewb", "alias": ["Chewb"], "classe": "Mage", "cat": "dist", "role": "Distance + « tank » Zerevor", "groupe": 4, "id": 15}, {"defaut": "Jetx", "alias": ["Jetx", "mooty"], "classe": "Mage", "cat": "dist", "role": "Distance", "groupe": 4, "id": 16}, {"defaut": "Dwa", "alias": ["Dwa"], "classe": "Mage", "cat": "dist", "role": "Arcanes — distance", "groupe": 4, "id": 17}, {"defaut": "Tothore", "alias": ["Tothore"], "classe": "Prêtre", "cat": "dist", "role": "Ombre — distance", "groupe": 4, "id": 18}, {"defaut": "Tafoi", "alias": ["Tafoi"], "classe": "Chaman", "cat": "heal", "role": "Resto — salves distance", "groupe": 4, "id": 19}, {"defaut": "Yunarïa", "alias": ["Yunarïa", "Yunaria"], "classe": "Paladin", "cat": "tank", "role": "Protection — Tank 3 (adds)", "groupe": 5, "id": 20}, {"defaut": "Dévill", "alias": ["Dévill", "dévill"], "classe": "Démoniste", "cat": "dist", "role": "Distance", "groupe": 5, "id": 21}, {"defaut": "Impies", "alias": ["Impies", "Proxy"], "classe": "Démoniste", "cat": "dist", "role": "Destru — tank Illidan P4", "groupe": 5, "id": 22}, {"defaut": "Atzana", "alias": ["Atzana", "Atzie"], "classe": "Druide", "cat": "heal", "role": "Resto — floraisons tanks", "groupe": 5, "id": 23}, {"defaut": "Malstep", "alias": ["Malstep"], "classe": "Druide", "cat": "dist", "role": "Équilibre — distance", "groupe": 5, "id": 24}];
-const REMPLACANTS = [{"nom": "Sellus", "classe": "Voleur"}, {"nom": "Eldan", "classe": "Paladin"}];
-const GENS = POSTES.map(p => ({nom: p.defaut, classe: p.classe})).concat(REMPLACANTS);
-
-// ---- panneau des postes -----------------------------------------------------
-const zone = document.getElementById('postes');
-let groupeCourant = 0;
-for (const p of POSTES) {
-  if (p.groupe !== groupeCourant) {
-    groupeCourant = p.groupe;
-    const t = document.createElement('div');
-    t.className = 'titre-groupe';
-    t.textContent = 'Groupe ' + p.groupe;
-    zone.appendChild(t);
-  }
-  const ligne = document.createElement('div');
-  ligne.className = 'poste';
-  ligne.id = 'poste-' + p.id;
-  const role = document.createElement('div');
-  role.className = 'role';
-  role.innerHTML = '<b class="classe-' + p.classe + '">' + p.defaut + '</b>' + p.role;
-  const sel = document.createElement('select');
-  sel.id = 'sel-' + p.id;
-  const gMeme = document.createElement('optgroup'); gMeme.label = p.classe;
-  const gAutres = document.createElement('optgroup'); gAutres.label = 'Autres';
-  for (const g of GENS) {
-    const o = document.createElement('option');
-    o.value = g.nom; o.textContent = g.nom;
-    o.className = 'classe-' + g.classe;
-    if (g.nom === p.defaut) o.selected = true;
-    (g.classe === p.classe ? gMeme : gAutres).appendChild(o);
-  }
-  sel.appendChild(gMeme); sel.appendChild(gAutres);
-  const autre = document.createElement('option');
-  autre.value = '__autre__'; autre.textContent = '✏ Autre…';
-  sel.appendChild(autre);
-  sel.addEventListener('change', () => {
-    if (sel.value === '__autre__') {
-      const n = (prompt('Nom du nouveau joueur :') || '').trim();
-      if (!n) { sel.value = p.defaut; }
-      else choisir(p, n);
-    }
-    appliquer();
-  });
-  ligne.appendChild(role); ligne.appendChild(sel);
-  zone.appendChild(ligne);
-}
-
-function choisir(p, nom) {
-  const sel = document.getElementById('sel-' + p.id);
-  if (![...sel.options].some(o => o.value === nom)) {
-    const o = document.createElement('option');
-    o.value = nom; o.textContent = nom;
-    sel.insertBefore(o, sel.querySelector('option[value="__autre__"]'));
-  }
-  sel.value = nom;
-}
+// Sélection courante : id de poste -> nom du remplaçant (absent = titulaire).
+const SELECTION = {};
 
 // ---- textes originaux des SVG ----------------------------------------------
 const ORIGINAUX = [];
@@ -216,10 +173,8 @@ function appliquer() {
   const rempl = {};
   let nb = 0;
   for (const p of POSTES) {
-    const sel = document.getElementById('sel-' + p.id);
-    const change = sel.value && sel.value !== p.defaut && sel.value !== '__autre__';
-    document.getElementById('poste-' + p.id).classList.toggle('change', change);
-    if (change) { nb++; for (const a of p.alias) rempl[a] = sel.value; }
+    const v = SELECTION[p.id];
+    if (v && v !== p.defaut) { nb++; for (const a of p.alias) rempl[a] = v; }
   }
   const aliases = Object.keys(rempl).sort((a, b) => b.length - a.length);
   const rx = aliases.length ? new RegExp(aliases.map(echap).join('|'), 'g') : null;
@@ -233,10 +188,10 @@ function appliquer() {
     if (node.nodeValue !== t) node.nodeValue = t;
   }
   document.getElementById('bilan').textContent =
-    nb ? nb + ' changement(s) — pense à exporter pour le gdoc.' : 'Aucun changement.';
+    nb ? nb + ' remplacement(s) actif(s) sur les cartes.' : '';
 }
 
-// ---- onglets ----------------------------------------------------------------
+// ---- onglets de cartes ------------------------------------------------------
 const onglets = document.querySelectorAll('.onglet');
 onglets.forEach(b => b.addEventListener('click', () => {
   onglets.forEach(x => x.classList.remove('actif'));
@@ -246,43 +201,31 @@ onglets.forEach(b => b.addEventListener('click', () => {
 }));
 onglets[0].classList.add('actif');
 
-// ---- export -----------------------------------------------------------------
-const dlg = document.getElementById('dlg');
-document.getElementById('btn-export').addEventListener('click', () => {
-  appliquer();
-  const lignes = ['# G\u00e9n\u00e9r\u00e9 par l\u2019Organisateur de raid EDEN'];
-  for (const p of POSTES) {
-    const v = document.getElementById('sel-' + p.id).value;
-    if (v && v !== p.defaut && v !== '__autre__')
-      for (const a of p.alias) lignes.push(a + ' = ' + v);
-  }
-  if (lignes.length === 1) lignes.push('# (aucun changement)');
-  const txt = lignes.join('\n') + '\n';
-  document.getElementById('dlg-texte').value = txt;
-  document.getElementById('btn-dl').href =
-    'data:text/plain;charset=utf-8,' + encodeURIComponent(txt);
-  dlg.showModal();
-});
-document.getElementById('btn-copier').addEventListener('click', () =>
-  navigator.clipboard.writeText(document.getElementById('dlg-texte').value));
-document.getElementById('btn-fermer').addEventListener('click', () => dlg.close());
-document.getElementById('btn-raz').addEventListener('click', () => {
-  for (const p of POSTES) document.getElementById('sel-' + p.id).value = p.defaut;
-  appliquer();
-});
-
 // ---- import Raid-Helper -----------------------------------------------------
 const CLASSE_FR = {warrior:'Guerrier', paladin:'Paladin', hunter:'Chasseur', rogue:'Voleur',
   priest:'Pr\u00eatre', shaman:'Chaman', mage:'Mage', warlock:'D\u00e9moniste', druid:'Druide',
   guerrier:'Guerrier', chasseur:'Chasseur', voleur:'Voleur', pretre:'Pr\u00eatre',
   chaman:'Chaman', demoniste:'D\u00e9moniste', druide:'Druide'};
 const HORS_JEU = ['bench', 'late', 'tentative', 'absence', 'absent', 'declined'];
+// Dans le Composition Tool, className peut être un RÔLE (« Tank », « Healer ») :
+// la vraie classe se déduit alors de la spé (suffixe « 1 » = 2e classe qui a
+// cette spé chez Raid-Helper : Holy1=Paladin, Restoration1=Chaman…).
+const ROLES_RH = {tank:'tank', healer:'heal', heal:'heal', dps:null, melee:'cac', ranged:'dist'};
+const SPEC_CLASSE = {beastmastery:'Chasseur', marksmanship:'Chasseur', survival:'Chasseur',
+  balance:'Druide', dreamstate:'Druide', feral:'Druide', restoration:'Druide', guardian:'Druide',
+  arms:'Guerrier', fury:'Guerrier', protection:'Guerrier',
+  discipline:'Pr\u00eatre', holy:'Pr\u00eatre', shadow:'Pr\u00eatre', smite:'Pr\u00eatre',
+  arcane:'Mage', fire:'Mage', frost:'Mage',
+  elemental:'Chaman', enhancement:'Chaman', restoration1:'Chaman',
+  holy1:'Paladin', protection1:'Paladin', retribution:'Paladin',
+  assassination:'Voleur', combat:'Voleur', subtlety:'Voleur',
+  affliction:'D\u00e9moniste', demonology:'D\u00e9moniste', destruction:'D\u00e9moniste'};
 const CAT_SPEC = {protection:'tank', guardian:'tank',
   arms:'cac', fury:'cac', combat:'cac', assassination:'cac', subtlety:'cac',
   enhancement:'cac', retribution:'cac', feral:'cac',
-  restoration:'heal', holy:'heal', discipline:'heal',
+  restoration:'heal', holy:'heal', discipline:'heal', dreamstate:'heal',
   balance:'dist', elemental:'dist', shadow:'dist', affliction:'dist', demonology:'dist',
-  destruction:'dist', arcane:'dist', fire:'dist', frost:'dist',
+  destruction:'dist', arcane:'dist', fire:'dist', frost:'dist', smite:'dist',
   marksmanship:'dist', beastmastery:'dist', survival:'dist',
   amelioration:'cac', vindicte:'cac', equilibre:'dist', elementaire:'dist', ombre:'dist',
   sacre:'heal', farouche:'cac'};
@@ -294,9 +237,13 @@ function norm(s) {
 
 function entree(nom, classe, spec) {
   nom = String(nom || '').trim();
-  const c = norm(classe), s = norm(spec).replace(/[0-9]+$/, '');
+  const c = norm(classe);
+  const s1 = norm(spec);                       // avec suffixe (holy1, protection1…)
+  const s = s1.replace(/[0-9]+$/, '');         // sans suffixe, pour la catégorie
   if (!nom || HORS_JEU.includes(c)) return null;
-  return {nom: nom, classe: CLASSE_FR[c] || null, cat: CAT_SPEC[s] || null, brut: classe};
+  const cl = CLASSE_FR[c] || SPEC_CLASSE[s1] || SPEC_CLASSE[s] || null;
+  const cat = (c in ROLES_RH && ROLES_RH[c]) || CAT_SPEC[s] || null;
+  return {nom: nom, classe: cl, cat: cat, brut: classe};
 }
 
 function parserImport(txt) {
@@ -304,7 +251,8 @@ function parserImport(txt) {
   const entrees = [];
   if (txt[0] === '{' || txt[0] === '[') {
     const j = JSON.parse(txt);
-    const arr = Array.isArray(j) ? j : (j.signUps || j.signups || j.raid || []);
+    const arr = Array.isArray(j) ? j
+              : (j.signUps || j.signups || j.slots || j.raid || []);
     for (const e of arr) {
       const x = entree(e.name || e.userName || e.player, e.className || e.class,
                        e.specName || e.spec);
@@ -332,6 +280,7 @@ function parserImport(txt) {
 async function importer() {
   const rap = document.getElementById('rapport');
   let txt = document.getElementById('imp-texte').value.trim();
+  if (!txt) { rap.innerHTML = '<span class="ko">Colle d\u2019abord un export ou un lien.</span>'; return; }
   const m = txt.match(/raid-helper\.dev\/event\/([0-9]+)/) || txt.match(/^([0-9]{15,})$/);
   if (m) {
     rap.innerHTML = 'R\u00e9cup\u00e9ration de l\u2019\u00e9v\u00e9nement\u2026';
@@ -350,16 +299,19 @@ async function importer() {
   catch (e) { rap.innerHTML = '<span class="ko">Format non reconnu : ' + e + '</span>'; return; }
   if (!entrees.length) { rap.innerHTML = '<span class="ko">Aucun inscrit trouv\u00e9.</span>'; return; }
 
-  // 1. les noms connus reprennent leur poste
+  // 1. les noms connus reprennent leur poste — les noms composites du
+  // Composition Tool (« Markula/Sellus », « Atzie/Atzana ») matchent par partie
   const parNom = {};
   for (const p of POSTES) for (const a of p.alias.concat([p.defaut])) parNom[norm(a)] = p;
+  for (const k of Object.keys(SELECTION)) delete SELECTION[k];
   const presents = new Set(), nouveaux = [];
   for (const e of entrees) {
-    const p = parNom[norm(e.nom)];
-    if (p && !presents.has(p.id)) { presents.add(p.id); choisir(p, p.defaut); }
-    else if (!p) nouveaux.push(e);
+    const cles = [norm(e.nom)].concat(e.nom.split('/').map(norm));
+    const p = cles.map(k => parNom[k]).find(Boolean);
+    if (p && !presents.has(p.id)) presents.add(p.id);
+    else if (!p) { e.nom = e.nom.split('/')[0].trim() || e.nom; nouveaux.push(e); }
   }
-  // 2. les nouveaux remplacent les absents : classe+cat\u00e9gorie, puis classe seule
+  // 2. les nouveaux remplacent les absents : classe+catégorie, puis classe seule
   const libres = POSTES.filter(p => !presents.has(p.id));
   const pris = new Set(), lignes = [];
   lignes.push('<span class="ok">' + presents.size + '/25 titulaires inscrits.</span>');
@@ -370,7 +322,7 @@ async function importer() {
                                     (passe === 2 || p.cat === e.cat));
       if (cand) {
         pris.add(cand.id); e.place = true;
-        choisir(cand, e.nom);
+        SELECTION[cand.id] = e.nom;
         lignes.push('<span class="warn">' + e.nom + '</span> (' + e.classe +
                     ') remplace <b>' + cand.defaut + '</b> — ' + cand.role);
       }
@@ -385,12 +337,34 @@ async function importer() {
   appliquer();
 }
 
-const dlgImp = document.getElementById('dlg-imp');
-document.getElementById('btn-import').addEventListener('click', () => {
-  document.getElementById('rapport').innerHTML = '';
-  dlgImp.showModal();
-});
 document.getElementById('btn-analyser').addEventListener('click', importer);
-document.getElementById('btn-imp-fermer').addEventListener('click', () => dlgImp.close());
+document.getElementById('btn-raz').addEventListener('click', () => {
+  for (const k of Object.keys(SELECTION)) delete SELECTION[k];
+  document.getElementById('rapport').innerHTML = '';
+  document.getElementById('imp-texte').value = '';
+  appliquer();
+});
+
+// ---- export remplacements.txt (variante locale) -----------------------------
+const btnExport = document.getElementById('btn-export');
+if (btnExport) {
+  const dlg = document.getElementById('dlg');
+  btnExport.addEventListener('click', () => {
+    const lignes = ['# G\u00e9n\u00e9r\u00e9 par l\u2019Organisateur de raid EDEN'];
+    for (const p of POSTES) {
+      const v = SELECTION[p.id];
+      if (v && v !== p.defaut) for (const a of p.alias) lignes.push(a + ' = ' + v);
+    }
+    if (lignes.length === 1) lignes.push('# (aucun changement)');
+    const txt = lignes.join('\n') + '\n';
+    document.getElementById('dlg-texte').value = txt;
+    document.getElementById('btn-dl').href =
+      'data:text/plain;charset=utf-8,' + encodeURIComponent(txt);
+    dlg.showModal();
+  });
+  document.getElementById('btn-copier').addEventListener('click', () =>
+    navigator.clipboard.writeText(document.getElementById('dlg-texte').value));
+  document.getElementById('btn-fermer').addEventListener('click', () => dlg.close());
+}
 </script>
 </body></html>
