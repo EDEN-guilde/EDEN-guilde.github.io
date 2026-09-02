@@ -929,6 +929,56 @@ for (const [i, [node, orig, trouves, ci]] of ORIGINAUX.entries()) {
                stroke0: circleEl ? circleEl.getAttribute('stroke') : null});
 }
 
+// Encadrés (≥2 étiquettes dans le même groupe déplaçable) : quand des rangées
+// sont masquées, les autres remontent pour COLLER les noms et le fond noir se
+// raccourcit — pas de trou.
+const BOITES = [];
+{
+  const parGroupe = new Map();
+  for (const L of LABELS) {
+    const g = L.textEl.closest('.deplacable');
+    if (!g) continue;
+    if (!parGroupe.has(g)) parGroupe.set(g, []);
+    parGroupe.get(g).push(L);
+  }
+  for (const [g, ls] of parGroupe) {
+    if (ls.length < 2) continue;
+    const lignes = [];
+    for (const L of ls) {
+      // la rangée = l'enfant direct de la boîte qui contient l'étiquette
+      let e = L.textEl;
+      while (e.parentElement && e.parentElement !== g) e = e.parentElement;
+      if (e.parentElement !== g || e === L.textEl) continue;
+      L.ligneG = e;   // masquée/déplacée en bloc par majJetons/compacterBoites
+      lignes.push({L: L, ligneG: e, tr0: e.getAttribute('transform') || '',
+                   yT0: parseFloat(L.textEl.getAttribute('y')) || 0});
+    }
+    if (lignes.length < 2) continue;
+    lignes.sort((a, b) => a.yT0 - b.yT0);
+    const rect = g.querySelector('rect');
+    BOITES.push({lignes: lignes, rect: rect,
+                 h0: rect ? parseFloat(rect.getAttribute('height')) : 0,
+                 pas: lignes.length > 1 ? lignes[1].yT0 - lignes[0].yT0 : 0});
+  }
+}
+
+function placerLigne(l, delta) {
+  const tr = delta ? 'translate(0, ' + delta + ') ' + l.tr0 : l.tr0;
+  if (tr) l.ligneG.setAttribute('transform', tr.trim());
+  else l.ligneG.removeAttribute('transform');
+}
+
+function compacterBoites() {
+  for (const B of BOITES) {
+    for (const l of B.lignes) placerLigne(l, 0);
+    const visibles = B.lignes.filter(l => l.ligneG.style.display !== 'none');
+    visibles.forEach((l, k) => placerLigne(l, B.lignes[k].yT0 - l.yT0));
+    if (B.rect && B.pas)
+      B.rect.setAttribute('height',
+        Math.max(B.h0 - B.pas * (B.lignes.length - visibles.length), B.pas));
+  }
+}
+
 function majJetons() {
   for (const L of LABELS) {
     const p = L.poste;
@@ -940,12 +990,15 @@ function majJetons() {
       const nomLoc = Object.values(local)[0];
       occ = GENS.find(g => g.nom === nomLoc) || (!nomLoc || nomLoc === TIRET ? null : occ);
     }
-    // poste vacant : le jeton (icône + anneau + nom) disparaît entièrement —
+    // poste vacant : le jeton (ou la rangée entière d'un encadré) disparaît —
     // les cartes ne montrent que les gens réellement présents dans l'import
     const cache = !occ;
-    L.imageEl.style.display = cache ? 'none' : '';
-    L.textEl.style.display = cache ? 'none' : '';
-    if (L.circleEl) L.circleEl.style.display = cache ? 'none' : '';
+    if (L.ligneG) L.ligneG.style.display = cache ? 'none' : '';
+    else {
+      L.imageEl.style.display = cache ? 'none' : '';
+      L.textEl.style.display = cache ? 'none' : '';
+      if (L.circleEl) L.circleEl.style.display = cache ? 'none' : '';
+    }
     if (cache) continue;
     const defautSpec = occ.nom === p.defaut && occ.classe === p.classe &&
                        norm(occ.spec || '') === norm(p.spec || '');
@@ -963,6 +1016,7 @@ function majJetons() {
       if (L.circleEl) L.circleEl.setAttribute('stroke', coul);
     }
   }
+  compacterBoites();
 }
 
 if (restaurer())
