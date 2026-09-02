@@ -1412,8 +1412,10 @@ document.getElementById('pub-envoyer').addEventListener('click', async () => {
     const postes = [];
     for (const p of POSTES) {
       const occ = AFFECTES[p.id];
-      const nom = occ ? occ.nom : TIRET;
-      for (const a of p.alias) postes.push([a, nom]);
+      // poste vacant : ne JAMAIS envoyer « — » (au coup suivant le TextFinder
+      // du relais remplacerait TOUS les tirets du classeur par le nouveau
+      // nom) — libellé unique par alias, donc retrouvable et réversible.
+      for (const a of p.alias) postes.push([a, occ ? occ.nom : a + ' (absent)']);
     }
     const message = '\ud83d\udccb **Assignations EDEN mises \u00e0 jour** (' +
       new Date().toLocaleDateString('fr-FR') +
