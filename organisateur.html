@@ -237,7 +237,9 @@ let MENTIONS = {};
 let PERM = {};        // échanges de places par carte : {carte: {posteId: posteId source}}
 let POSITIONS = {};   // jetons déplacés : {'carte:index': [x, y]}
 let AJOUTS = {};      // joueurs ajoutés : {'b<carte:boite>': [noms]} (rangée
-                      // d'encadré) ou {'t<idxTexte>': [noms]} (fin de ligne)
+                      // d'encadré), {'t<idxTexte>': [noms]} (jeton près d'une
+                      // étiquette) ou {'c<carte>': [noms]} (jeton libre)
+let MASQUES = {};     // jetons flottants automatiques retirés : {'z<carte>:<nom>': 1}
 const CLE_STOCK = 'eden-organisateur';
 const VER_STOCK = 7;   // à incrémenter quand la logique change : invalide les
                        // sauvegardes des anciennes versions de la page
@@ -249,6 +251,7 @@ function razEtat() {
   PERM = {};
   POSITIONS = {};
   AJOUTS = {};
+  MASQUES = {};
 }
 razEtat();
 
@@ -517,7 +520,8 @@ function sauver() {
   try {
     localStorage.setItem(CLE_STOCK, JSON.stringify(
       {ver: VER_STOCK, v: ORIGINAUX.length, affectes: AFFECTES, gens: GENS,
-       mentions: MENTIONS, perm: PERM, positions: POSITIONS, ajouts: AJOUTS}));
+       mentions: MENTIONS, perm: PERM, positions: POSITIONS, ajouts: AJOUTS,
+       masques: MASQUES}));
   } catch (e) {}
 }
 function restaurer() {
@@ -530,6 +534,7 @@ function restaurer() {
     PERM = d.perm || {};
     POSITIONS = d.positions || {};
     AJOUTS = d.ajouts || {};
+    MASQUES = d.masques || {};
     return true;
   } catch (e) { return false; }
 }
@@ -1344,7 +1349,43 @@ function dragAjout(g, cle, svg, base0) {
   });
 }
 
-function jetonFlottant(svg, nom, gens, cle, base0, marqueur, valeur) {
+// clic sur un jeton flottant : remplacer / retirer (pas d'échange de postes —
+// un jeton flottant ne représente pas un poste)
+function menuJeton(ev, nom, ctx, pos) {
+  if (Date.now() - DRAG_RECENT < 350) return;
+  ev.stopPropagation();
+  const cleAjout = ctx.type === 't' ? 't' + ctx.idx : 'c' + ctx.carte;
+  const clePos = ctx.type === 't' ? 'a' + ctx.idx + ':' : 'c' + ctx.carte + ':';
+  const items = [{header: true, label: '\u270e Remplacer ce jeton par\u2026'}];
+  for (const g of GENS) {
+    if (g.nom === nom) continue;
+    items.push({label: g.nom, couleur: COULEUR_CLASSE[g.classe],
+      icone: iconeSpec(g.classe, g.spec), det: g.classe || '',
+      action: () => {
+        if (ctx.type === 'auto') {
+          MASQUES['z' + ctx.carte + ':' + nom] = 1;
+          (AJOUTS['c' + ctx.carte] = AJOUTS['c' + ctx.carte] || []).push(g.nom);
+          if (pos) POSITIONS['c' + ctx.carte + ':' + g.nom] = pos.slice();
+        } else {
+          AJOUTS[cleAjout] = (AJOUTS[cleAjout] || []).map(n => n === nom ? g.nom : n);
+          if (pos) POSITIONS[clePos + g.nom] = pos.slice();
+        }
+        appliquer();
+      }});
+  }
+  items.push({label: '\u2716 Retirer ce jeton (cette carte)', action: () => {
+    if (ctx.type === 'auto') MASQUES['z' + ctx.carte + ':' + nom] = 1;
+    else {
+      AJOUTS[cleAjout] = (AJOUTS[cleAjout] || []).filter(n => n !== nom);
+      if (!AJOUTS[cleAjout].length) delete AJOUTS[cleAjout];
+    }
+    appliquer();
+  }});
+  ouvrirMenu(ev.pageX, ev.pageY, nom +
+    (ctx.type === 'auto' ? ' \u2014 jeton automatique (hors zone sur son poste)' : ''), items);
+}
+
+function jetonFlottant(svg, nom, gens, cle, base0, marqueur, valeur, ctx) {
   const ic = iconeSpec(gens.classe, gens.spec);
   if (ic === null) return;
   // même gabarit que les jetons libres des cartes (icône ~46px + nom à droite)
@@ -1370,6 +1411,11 @@ function jetonFlottant(svg, nom, gens, cle, base0, marqueur, valeur) {
     '<tspan stroke="black" stroke-width="2.5" paint-order="stroke">' + nom + '</tspan></text>';
   svg.appendChild(g);
   dragAjout(g, cle, svg, base0);
+  g.style.cursor = 'pointer';
+  g.addEventListener('click', ev => {
+    const m = /translate\(([-\d.]+)[ ,]+([-\d.]+)/.exec(g.getAttribute('transform') || '');
+    menuJeton(ev, nom, ctx, m ? [parseFloat(m[1]), parseFloat(m[2])] : null);
+  });
 }
 
 function placerIconesAjouts() {
@@ -1394,7 +1440,27 @@ function placerIconesAjouts() {
       const base0 = bb && bb.width
         ? [bb.x + bb.width + 22, bb.y + bb.height / 2 + k * 36]
         : [60, 60 + k * 36];
-      jetonFlottant(svg, nom, gens, 'a' + L.idx + ':' + nom, base0, 'data-ajout', L.idx);
+      jetonFlottant(svg, nom, gens, 'a' + L.idx + ':' + nom, base0, 'data-ajout', L.idx,
+                    {type: 't', idx: L.idx, carte: L.carte});
+    });
+  }
+  // 1bis. ajouts LIBRES par carte ('c', créés par « Remplacer ce jeton ») :
+  // jetons flottants sans ancre, posés au centre par défaut
+  for (const k in AJOUTS) {
+    if (k[0] !== 'c') continue;
+    const ci = parseInt(k.slice(1));
+    const carte = document.getElementById('carte-' + ci);
+    if (!carte || carte.hidden) continue;
+    const svg = carte.querySelector('svg');
+    const vus = NOMS_AFFICHES[ci];
+    const vb = svg.viewBox.baseVal;
+    AJOUTS[k].forEach((nom, k2) => {
+      if (vus && vus.has(nom)) return;
+      const gens = GENS.find(x => x.nom === nom);
+      if (!gens) return;
+      jetonFlottant(svg, nom, gens, 'c' + ci + ':' + nom,
+        [vb.x + vb.width / 2 + k2 * 44, vb.y + vb.height / 2],
+        'data-ajout', 'c', {type: 'c', carte: ci});
     });
   }
   // 2. joueurs HORS ZONE (surplus de compo, cat jouée ≠ cat du poste) :
@@ -1416,7 +1482,7 @@ function placerIconesAjouts() {
     const ajoutes = new Set();
     for (const k in AJOUTS) {
       let c = -1;
-      if (k[0] === 'b') c = parseInt(k.slice(1));
+      if (k[0] === 'b' || k[0] === 'c') c = parseInt(k.slice(1));
       else if (k[0] === 't') {
         const L = LABELS.find(l => l.idx === +k.slice(1));
         c = L ? L.carte : -1;
@@ -1424,7 +1490,8 @@ function placerIconesAjouts() {
       if (c === ci) for (const n of AJOUTS[k]) ajoutes.add(n);
     }
     for (const nom of horsZoneNoms) {
-      if ((vus && vus.has(nom)) || ajoutes.has(nom)) continue;
+      if ((vus && vus.has(nom)) || ajoutes.has(nom) ||
+          MASQUES['z' + ci + ':' + nom]) continue;
       const gens = GENS.find(x => x.nom === nom);
       if (!gens || !gens.cat) continue;
       const zone = ZONE_JETON[gens.cat];
@@ -1442,7 +1509,8 @@ function placerIconesAjouts() {
         base0 = [bb.x + bb.width / 2, bb.y - 34];
         break;
       }
-      jetonFlottant(svg, nom, gens, 'z' + ci + ':' + nom, base0, 'data-horszone', '1');
+      jetonFlottant(svg, nom, gens, 'z' + ci + ':' + nom, base0, 'data-horszone', '1',
+                    {type: 'auto', carte: ci});
     }
   }
 }
