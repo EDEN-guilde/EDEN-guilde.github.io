@@ -193,12 +193,11 @@ dialog::backdrop{background:#000B}
   <h3>Publier les assignations</h3>
   <p>Rend les 16 cartes dans leur état actuel (imports, échanges, retouches,
   déplacements), <b>remplace les images et les noms dans le Google Sheet de la
-  guilde</b>, puis annonce le lien sur le Discord. Nécessite le relais
-  Apps Script de l'orga (voir PUBLICATION.md).</p>
-  <label>URL du relais (script.google.com/…/exec)</label>
-  <input type="text" id="pub-url" placeholder="https://script.google.com/macros/s/…/exec">
-  <label>Mot de passe de publication</label>
-  <input type="password" id="pub-mdp">
+  guilde</b>, puis annonce le lien sur le Discord.</p>
+  <div id="pub-config">
+    <label>URL du relais (script.google.com/…/exec)</label>
+    <input type="text" id="pub-url" placeholder="https://script.google.com/macros/s/…/exec">
+  </div>
   <label class="case"><input type="checkbox" id="pub-sans-discord">
     Mettre à jour le Sheet <b>sans</b> annoncer sur Discord</label>
   <div id="pub-etat"></div>
@@ -951,13 +950,16 @@ async function rendreCarte(i, largeur) {
   } finally { URL.revokeObjectURL(url); }
 }
 
+const URL_RELAIS = "https://script.google.com/macros/s/AKfycbw4n7zBi3CIRMDOO-QpGZjXq5ug_x4Q49OuDhmZJoiN15tv2_spYuPieerC7lXD8d0c/exec";   // câblée à la construction (relais.txt)
 const dlgPub = document.getElementById('dlg-pub');
 document.getElementById('btn-publier').addEventListener('click', () => {
-  try {
-    const cfg = JSON.parse(localStorage.getItem('eden-pub') || '{}');
-    if (cfg.url) document.getElementById('pub-url').value = cfg.url;
-    if (cfg.mdp) document.getElementById('pub-mdp').value = cfg.mdp;
-  } catch (e) {}
+  if (URL_RELAIS) document.getElementById('pub-config').style.display = 'none';
+  else {
+    try {
+      const cfg = JSON.parse(localStorage.getItem('eden-pub') || '{}');
+      if (cfg.url) document.getElementById('pub-url').value = cfg.url;
+    } catch (e) {}
+  }
   document.getElementById('pub-etat').innerHTML = '';
   dlgPub.showModal();
 });
@@ -965,14 +967,12 @@ document.getElementById('pub-fermer').addEventListener('click', () => dlgPub.clo
 
 document.getElementById('pub-envoyer').addEventListener('click', async () => {
   const et = document.getElementById('pub-etat');
-  const url = document.getElementById('pub-url').value.trim();
-  const mdp = document.getElementById('pub-mdp').value;
+  const url = URL_RELAIS || document.getElementById('pub-url').value.trim();
   if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) {
     et.innerHTML = '<span class="ko">URL du relais manquante ou invalide (elle finit par /exec).</span>';
     return;
   }
-  if (!mdp) { et.innerHTML = '<span class="ko">Mot de passe requis.</span>'; return; }
-  try { localStorage.setItem('eden-pub', JSON.stringify({url: url, mdp: mdp})); } catch (e) {}
+  try { localStorage.setItem('eden-pub', JSON.stringify({url: url})); } catch (e) {}
   const bouton = document.getElementById('pub-envoyer');
   bouton.disabled = true;
   try {
@@ -993,7 +993,7 @@ document.getElementById('pub-envoyer').addEventListener('click', async () => {
       ') \u2014 cartes et attributions du prochain raid :';
     et.textContent = 'Envoi au Google Sheet\u2026 (peut prendre une minute)';
     const r = await fetch(url, {method: 'POST',
-      body: JSON.stringify({mdp: mdp, cartes: cartes, postes: postes, message: message,
+      body: JSON.stringify({cartes: cartes, postes: postes, message: message,
                             sansDiscord: document.getElementById('pub-sans-discord').checked})});
     const j = await r.json();
     if (j.ok) {
