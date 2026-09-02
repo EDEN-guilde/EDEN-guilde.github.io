@@ -902,14 +902,25 @@ for (const [i, [node, orig, trouves, ci]] of ORIGINAUX.entries()) {
   const textEl = node.parentElement.closest('text') ||
                  (node.parentElement.tagName.toLowerCase() === 'text' ? node.parentElement : null);
   if (!textEl) continue;
-  let imageEl = null, el = textEl;
+  // l'icône du jeton est l'image juste AVANT le texte (jetons, encadrés à
+  // icône gauche) ou juste APRÈS (encadrés miroirs, icône à droite du nom)
+  let imageEl = null, el = textEl, avantTexte = true;
   while ((el = el.previousElementSibling)) {
     const tag = el.tagName.toLowerCase();
     if (tag === 'image') { imageEl = el; break; }
     if (tag === 'text') break;   // ligne précédente d'un encadré : stop
   }
+  if (!imageEl) {
+    avantTexte = false;
+    el = textEl;
+    while ((el = el.nextElementSibling)) {
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'image') { imageEl = el; break; }
+      if (tag === 'text') break;
+    }
+  }
   if (!imageEl) continue;
-  const avant = imageEl.previousElementSibling;
+  const avant = avantTexte ? imageEl.previousElementSibling : null;
   const circleEl = avant && avant.tagName.toLowerCase() === 'circle' ? avant : null;
   LABELS.push({idx: i, carte: ci, poste: ALIAS_POSTE[alias],
                textEl: textEl, imageEl: imageEl, circleEl: circleEl,
@@ -927,9 +938,16 @@ function majJetons() {
     const local = MENTIONS[L.idx];
     if (local) {
       const nomLoc = Object.values(local)[0];
-      occ = GENS.find(g => g.nom === nomLoc) || (nomLoc === TIRET ? null : occ);
+      occ = GENS.find(g => g.nom === nomLoc) || (!nomLoc || nomLoc === TIRET ? null : occ);
     }
-    const defautSpec = occ && occ.nom === p.defaut && occ.classe === p.classe &&
+    // poste vacant : le jeton (icône + anneau + nom) disparaît entièrement —
+    // les cartes ne montrent que les gens réellement présents dans l'import
+    const cache = !occ;
+    L.imageEl.style.display = cache ? 'none' : '';
+    L.textEl.style.display = cache ? 'none' : '';
+    if (L.circleEl) L.circleEl.style.display = cache ? 'none' : '';
+    if (cache) continue;
+    const defautSpec = occ.nom === p.defaut && occ.classe === p.classe &&
                        norm(occ.spec || '') === norm(p.spec || '');
     if (!occ || defautSpec) {
       L.imageEl.setAttribute('href', L.href0);
