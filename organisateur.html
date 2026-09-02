@@ -1068,8 +1068,8 @@ async function importer() {
     [(p, e) => memeZone(p, e),
      ' <span class="ko">\u26a0 poste \u00e0 r\u00f4le sp\u00e9cial ET hors r\u00f4le : v\u00e9rifie ses mentions</span>'],
     [(p, e) => !p.strict,
-     ' <span class="ko">\u26a0 HORS ZONE (avant/arri\u00e8re) : repositionne-le sur les cartes ' +
-     '(glisse son jeton ou \u00e9change-le au clic)</span>'],
+     ' <span class="ko">\u26a0 HORS ZONE : affich\u00e9 en jeton flottant de son c\u00f4t\u00e9 ' +
+     'sur les cartes \u2014 replace-le \u00e0 la souris si besoin</span>'],
     [(p, e) => true,
      ' <span class="ko">\u26a0 poste \u00e0 r\u00f4le sp\u00e9cial ET hors zone : v\u00e9rifie tout</span>'],
   ];
@@ -1212,6 +1212,9 @@ function majExtras() {
     for (const x of ex) x.g.remove();
     ex.length = 0;
     for (const nom of voulu) {
+      // le joueur est déjà affiché sur cette carte via un poste : pas de doublon
+      const vus = NOMS_AFFICHES[parseInt(B.cle)];
+      if (vus && vus.has(nom)) continue;
       const gens = GENS.find(g => g.nom === nom);
       const g2 = B.lignes[0].ligneG.cloneNode(true);
       g2.style.display = '';
@@ -1255,7 +1258,13 @@ function compacterBoites() {
   }
 }
 
+const ZONE_JETON = {tank: 'avant', cac: 'avant', dist: 'arriere', heal: 'arriere'};
+let HORS_ZONE = [];      // occupants masqués car hors zone : [{carte, nom}]
+let NOMS_AFFICHES = {};  // carte -> Set des noms réellement visibles via un poste
+
 function majJetons() {
+  HORS_ZONE = [];
+  NOMS_AFFICHES = {};
   for (const L of LABELS) {
     const p = L.poste;
     let occ = occPoste(L.carte, p);
@@ -1265,8 +1274,18 @@ function majJetons() {
       occ = GENS.find(g => g.nom === nomLoc) || (!nomLoc || nomLoc === TIRET ? null : occ);
     }
     // poste vacant : le jeton (ou la rangée entière d'un encadré) disparaît —
-    // les cartes ne montrent que les gens réellement présents dans l'import
-    const cache = !occ;
+    // les cartes ne montrent que les gens réellement présents dans l'import.
+    // Occupant HORS ZONE (ex. un distance posé sur un poste CaC) : pareil, il
+    // n'apparaît pas aux emplacements du poste — placerIconesAjouts le remet
+    // en jeton flottant déplaçable du bon côté, sans remplacer personne.
+    const gOcc = occ && GENS.find(g => g.nom === occ.nom);
+    const horsZone = !!(occ && gOcc && gOcc.cat &&
+                        ZONE_JETON[gOcc.cat] !== ZONE_JETON[p.cat]);
+    const cache = !occ || horsZone;
+    if (horsZone && !HORS_ZONE.some(h => h.carte === L.carte && h.nom === occ.nom))
+      HORS_ZONE.push({carte: L.carte, nom: occ.nom});
+    if (!cache)
+      (NOMS_AFFICHES[L.carte] = NOMS_AFFICHES[L.carte] || new Set()).add(occ.nom);
     if (L.ligneG) L.ligneG.style.display = cache ? 'none' : '';
     else {
       L.imageEl.style.display = cache ? 'none' : '';
@@ -1325,50 +1344,84 @@ function dragAjout(g, cle, svg, base0) {
   });
 }
 
+function jetonFlottant(svg, nom, gens, cle, base0, marqueur, valeur) {
+  const ic = iconeSpec(gens.classe, gens.spec);
+  if (ic === null) return;
+  const taille = 24, r = taille / 2;
+  const pos = POSITIONS[cle] || base0;
+  const coul = COULEUR_CLASSE[gens.classe] || '#FFFFFF';
+  const fonte = 19;
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute(marqueur, valeur);
+  g.setAttribute('class', 'deplacable');
+  g.setAttribute('transform', 'translate(' + pos[0] + ', ' + pos[1] + ')');
+  g.innerHTML =
+    '<rect x="' + (-r - 3) + '" y="' + (-r - 3) + '" width="' +
+      (taille + 12 + nom.length * fonte * 0.62) + '" height="' + (taille + 6) +
+      '" fill="transparent"></rect>' +
+    '<circle cx="0" cy="0" r="' + (r + 1.5) + '" fill="rgba(0,0,0,0.45)" stroke="' +
+      coul + '" stroke-width="1.5" style="pointer-events: none;"></circle>' +
+    '<image href="' + IMAGES[ic] + '" x="' + (-r) + '" y="' + (-r) + '" width="' + taille +
+      '" height="' + taille +
+      '" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image>' +
+    '<text x="' + (r + 5) + '" y="0" text-anchor="start" dominant-baseline="central" fill="' +
+      coul + '" font-size="' + fonte + '" font-weight="600" style="pointer-events: none;">' +
+    '<tspan stroke="black" stroke-width="2.5" paint-order="stroke">' + nom + '</tspan></text>';
+  svg.appendChild(g);
+  dragAjout(g, cle, svg, base0);
+}
+
 function placerIconesAjouts() {
+  document.querySelectorAll('.carte svg').forEach(s =>
+    s.querySelectorAll('[data-ajout],[data-horszone]').forEach(e => e.remove()));
+  // 1. ajouts manuels ➕ sur une étiquette libre — sauf si le joueur est déjà
+  // affiché sur la carte via un poste (dédoublonnage automatique)
   for (const L of LABELS) {
     if (L.ligneG) continue;
-    const svg = L.textEl.ownerSVGElement;
-    svg.querySelectorAll('[data-ajout="' + L.idx + '"]').forEach(e => e.remove());
     const noms = AJOUTS['t' + L.idx] || [];
     if (!noms.length) continue;
     const carte = document.getElementById('carte-' + L.carte);
     if (!carte || carte.hidden) continue;
+    const svg = L.textEl.ownerSVGElement;
+    const vus = NOMS_AFFICHES[L.carte];
     let bb = null;
     try { bb = L.textEl.getBBox(); } catch (e) {}
-    const taille = Math.max(20, parseFloat(L.imageEl.getAttribute('width')) || 24);
-    const NS = 'http://www.w3.org/2000/svg';
     noms.forEach((nom, k) => {
+      if (vus && vus.has(nom)) return;
       const gens = GENS.find(x => x.nom === nom);
-      const ic = gens ? iconeSpec(gens.classe, gens.spec) : null;
-      if (ic === null) return;
-      const cle = 'a' + L.idx + ':' + nom;
+      if (!gens) return;
       const base0 = bb && bb.width
-        ? [bb.x + bb.width + 10 + taille / 2, bb.y + bb.height / 2 + k * (taille + 12)]
-        : [60, 60 + k * (taille + 12)];
-      const pos = POSITIONS[cle] || base0;
-      const coul = COULEUR_CLASSE[gens.classe] || '#FFFFFF';
-      const fonte = Math.max(15, Math.round(taille * 0.8));
-      const g = document.createElementNS(NS, 'g');
-      g.setAttribute('data-ajout', L.idx);
-      g.setAttribute('class', 'deplacable');
-      g.setAttribute('transform', 'translate(' + pos[0] + ', ' + pos[1] + ')');
-      const r = taille / 2;
-      g.innerHTML =
-        '<rect x="' + (-r - 3) + '" y="' + (-r - 3) + '" width="' +
-          (taille + 12 + nom.length * fonte * 0.62) + '" height="' + (taille + 6) +
-          '" fill="transparent"></rect>' +
-        '<circle cx="0" cy="0" r="' + (r + 1.5) + '" fill="rgba(0,0,0,0.45)" stroke="' +
-          coul + '" stroke-width="1.5" style="pointer-events: none;"></circle>' +
-        '<image href="' + IMAGES[ic] + '" x="' + (-r) + '" y="' + (-r) + '" width="' + taille +
-          '" height="' + taille +
-          '" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image>' +
-        '<text x="' + (r + 5) + '" y="0" text-anchor="start" dominant-baseline="central" fill="' +
-          coul + '" font-size="' + fonte + '" font-weight="600" style="pointer-events: none;">' +
-        '<tspan stroke="black" stroke-width="2.5" paint-order="stroke">' + nom + '</tspan></text>';
-      svg.appendChild(g);
-      dragAjout(g, cle, svg, base0);
+        ? [bb.x + bb.width + 22, bb.y + bb.height / 2 + k * 36]
+        : [60, 60 + k * 36];
+      jetonFlottant(svg, nom, gens, 'a' + L.idx + ':' + nom, base0, 'data-ajout', L.idx);
     });
+  }
+  // 2. occupants HORS ZONE masqués par majJetons : jeton flottant automatique
+  // posé près d'une étiquette de LEUR côté (avant/arrière), déplaçable
+  for (const h of HORS_ZONE) {
+    const carte = document.getElementById('carte-' + h.carte);
+    if (!carte || carte.hidden) continue;
+    const vus = NOMS_AFFICHES[h.carte];
+    if (vus && vus.has(h.nom)) continue;
+    const gens = GENS.find(x => x.nom === h.nom);
+    if (!gens || !gens.cat) continue;
+    const zone = ZONE_JETON[gens.cat];
+    const svg = carte.querySelector('svg');
+    // ancre : première étiquette de SON côté située DANS le viewBox (les SVG
+    // sont rognés en « slice » : des éléments existent hors du cadre visible)
+    const vb = svg.viewBox.baseVal;
+    let base0 = [vb.x + vb.width / 2, vb.y + vb.height / 2];
+    for (const l of LABELS) {
+      if (l.carte !== h.carte || ZONE_JETON[l.poste.cat] !== zone) continue;
+      let bb = null;
+      try { bb = l.textEl.getBBox(); } catch (e) {}
+      if (!bb || !bb.width) continue;
+      if (bb.x < vb.x || bb.x > vb.x + vb.width - 80 ||
+          bb.y < vb.y + 60 || bb.y > vb.y + vb.height - 40) continue;
+      base0 = [bb.x + bb.width / 2, bb.y - 26];
+      break;
+    }
+    jetonFlottant(svg, h.nom, gens, 'z' + h.carte + ':' + h.nom, base0, 'data-horszone', '1');
   }
 }
 
