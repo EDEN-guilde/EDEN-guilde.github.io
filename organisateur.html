@@ -103,6 +103,15 @@ dialog{background:var(--surface); color:var(--ink); border:1px solid var(--gold-
 dialog h3{margin-top:0; font-family:"Cinzel",serif; color:var(--gold); letter-spacing:.05em}
 dialog p{font-size:12.5px; color:var(--ink-dim)}
 dialog textarea{width:540px; height:190px}
+dialog input[type=text],dialog input[type=password]{width:100%; background:var(--ground);
+  color:var(--ink); border:1px solid var(--line); border-radius:var(--r);
+  padding:7px 9px; font-size:13px; font-family:inherit; margin:2px 0 10px}
+dialog label{font-size:11.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-faint)}
+dialog .case{display:flex; align-items:center; gap:7px; font-size:13px;
+  color:var(--ink-dim); text-transform:none; letter-spacing:0; margin-bottom:10px}
+#pub-etat{font-size:13px; margin:10px 0; min-height:18px}
+#pub-etat .ok{color:#7FB069} #pub-etat .ko{color:#D6453C}
 dialog::backdrop{background:#000B}
 </style></head><body>
 <div class="wrap">
@@ -169,6 +178,7 @@ dialog::backdrop{background:#000B}
     <textarea id="imp-texte" placeholder="https://raid-helper.xyz/raidplan/… — ou export JSON/CSV du Composition Tool"></textarea>
     <div class="boutons">
       <button class="btn" id="btn-analyser">⬇ Importer</button>
+      <button class="btn" id="btn-publier">🚀 Publier</button>
       <button class="btn discret" id="btn-raz">↺ Réinitialiser</button>
       
       <div id="bilan"></div>
@@ -179,6 +189,22 @@ dialog::backdrop{background:#000B}
   </section>
 </div>
 <div id="menu"></div>
+<dialog id="dlg-pub" style="max-width:520px">
+  <h3>Publier les assignations</h3>
+  <p>Rend les 16 cartes dans leur état actuel (imports, échanges, retouches,
+  déplacements), <b>remplace les images et les noms dans le Google Sheet de la
+  guilde</b>, puis annonce le lien sur le Discord. Nécessite le relais
+  Apps Script de l'orga (voir PUBLICATION.md).</p>
+  <label>URL du relais (script.google.com/…/exec)</label>
+  <input type="text" id="pub-url" placeholder="https://script.google.com/macros/s/…/exec">
+  <label>Mot de passe de publication</label>
+  <input type="password" id="pub-mdp">
+  <label class="case"><input type="checkbox" id="pub-sans-discord">
+    Mettre à jour le Sheet <b>sans</b> annoncer sur Discord</label>
+  <div id="pub-etat"></div>
+  <button class="btn" id="pub-envoyer">🚀 Publier maintenant</button>
+  <button class="btn discret" id="pub-fermer" style="float:right">Fermer</button>
+</dialog>
 <dialog id="dlg">
   <h3>Export — remplacements.txt</h3>
   <p></p>
@@ -891,6 +917,98 @@ if (restaurer())
   document.getElementById('rapport').innerHTML =
     '<span class="ok">Compo de la derni\u00e8re session restaur\u00e9e.</span>';
 appliquer();
+
+// ---- publication : Google Sheet + Discord via le relais Apps Script ---------
+// Onglet du gdoc et rang de la carte dans l'onglet, pour chaque carte 0-15.
+const FEUILLES = [
+  ['Rage Winterchill', 0], ['Anetheron', 0], ["Kaz'rogal", 0], ['Azgalor', 0],
+  ['Archimonde', 0], ["Naj'entus", 0], ['Supr\u00e9mus', 0], ["Ombre d'Akama", 0],
+  ['Teron', 0], ['Gurtogg', 0], ['Reliquaire des \u00e2mes', 0], ['M\u00e8re Shahraz', 0],
+  ['Conseil Illidari', 0], ['Illidan', 0], ['Illidan', 1], ['Illidan', 2],
+];
+
+async function rendreCarte(i, largeur) {
+  const src = document.querySelector('#carte-' + i + ' svg');
+  const clone = src.cloneNode(true);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+  const vb = src.viewBox.baseVal;
+  const h = Math.round(largeur * vb.height / vb.width);
+  clone.setAttribute('width', largeur);
+  clone.setAttribute('height', h);
+  const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  st.textContent = "text{font-family:'Segoe UI',Arial,sans-serif}";
+  clone.insertBefore(st, clone.firstChild);
+  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)],
+                                           {type: 'image/svg+xml'}));
+  try {
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    const cv = document.createElement('canvas');
+    cv.width = largeur; cv.height = h;
+    cv.getContext('2d').drawImage(img, 0, 0, largeur, h);
+    return cv.toDataURL('image/jpeg', 0.85).split(',')[1];
+  } finally { URL.revokeObjectURL(url); }
+}
+
+const dlgPub = document.getElementById('dlg-pub');
+document.getElementById('btn-publier').addEventListener('click', () => {
+  try {
+    const cfg = JSON.parse(localStorage.getItem('eden-pub') || '{}');
+    if (cfg.url) document.getElementById('pub-url').value = cfg.url;
+    if (cfg.mdp) document.getElementById('pub-mdp').value = cfg.mdp;
+  } catch (e) {}
+  document.getElementById('pub-etat').innerHTML = '';
+  dlgPub.showModal();
+});
+document.getElementById('pub-fermer').addEventListener('click', () => dlgPub.close());
+
+document.getElementById('pub-envoyer').addEventListener('click', async () => {
+  const et = document.getElementById('pub-etat');
+  const url = document.getElementById('pub-url').value.trim();
+  const mdp = document.getElementById('pub-mdp').value;
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) {
+    et.innerHTML = '<span class="ko">URL du relais manquante ou invalide (elle finit par /exec).</span>';
+    return;
+  }
+  if (!mdp) { et.innerHTML = '<span class="ko">Mot de passe requis.</span>'; return; }
+  try { localStorage.setItem('eden-pub', JSON.stringify({url: url, mdp: mdp})); } catch (e) {}
+  const bouton = document.getElementById('pub-envoyer');
+  bouton.disabled = true;
+  try {
+    const cartes = [];
+    for (let i = 0; i < 16; i++) {
+      et.textContent = 'Rendu des cartes\u2026 ' + (i + 1) + '/16';
+      cartes.push({feuille: FEUILLES[i][0], position: FEUILLES[i][1],
+                   jpeg: await rendreCarte(i, i >= 13 ? 1000 : 1130)});
+    }
+    const postes = [];
+    for (const p of POSTES) {
+      const occ = AFFECTES[p.id];
+      const nom = occ ? occ.nom : TIRET;
+      for (const a of p.alias) postes.push([a, nom]);
+    }
+    const message = '\ud83d\udccb **Assignations EDEN mises \u00e0 jour** (' +
+      new Date().toLocaleDateString('fr-FR') +
+      ') \u2014 cartes et attributions du prochain raid :';
+    et.textContent = 'Envoi au Google Sheet\u2026 (peut prendre une minute)';
+    const r = await fetch(url, {method: 'POST',
+      body: JSON.stringify({mdp: mdp, cartes: cartes, postes: postes, message: message,
+                            sansDiscord: document.getElementById('pub-sans-discord').checked})});
+    const j = await r.json();
+    if (j.ok) {
+      et.innerHTML = '<span class="ok">\u2714 Publi\u00e9 : ' + j.images +
+        ' carte(s) remplac\u00e9e(s), ' + j.textes + ' nom(s) mis \u00e0 jour \u00b7 Discord : ' +
+        j.discord + '</span>' +
+        (j.erreurs && j.erreurs.length ? '<br><span class="ko">' + j.erreurs.join('<br>') + '</span>' : '');
+    } else {
+      et.innerHTML = '<span class="ko">Refus\u00e9 : ' + (j.erreur || '?') + '</span>';
+    }
+  } catch (err) {
+    et.innerHTML = '<span class="ko">\u00c9chec : ' + err +
+      ' \u2014 v\u00e9rifie l\u2019URL du relais et son d\u00e9ploiement (acc\u00e8s \u00ab Tout le monde \u00bb).</span>';
+  } finally { bouton.disabled = false; }
+});
 
 // ---- export remplacements.txt (variante locale) -----------------------------
 const btnExport = document.getElementById('btn-export');
