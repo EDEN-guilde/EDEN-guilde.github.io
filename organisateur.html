@@ -159,13 +159,14 @@ dialog::backdrop{background:#000B}
 
   <section class="panel" id="import">
     <h2>Importer la compo Raid-Helper</h2>
-    <p>Colle l'export du <b>Composition Tool</b> ou de l'événement raid-helper.dev
-    (JSON ou CSV), ou simplement le <b>lien de l'événement</b>, puis Importer.
+    <p>Colle le <b>lien du raidplan</b> (raid-helper.xyz/raidplan/…) ou de
+    l'événement, ou l'export JSON/CSV du <b>Composition Tool</b>, puis Importer.
+    Le résumé en bas reprend les groupes du raidplan tels quels.
     Chaque raid part d'une feuille blanche : les inscrits sont placés par
     classe puis par rôle — <b>jamais hors rôle</b> (pas de DPS sur un poste
     heal). Ce qui ne se place pas tout seul reste à ta main : poste sans
     inscrit = « — », réattribuable ci-dessous ou d'un clic sur les cartes.</p>
-    <textarea id="imp-texte" placeholder="Export JSON/CSV du Composition Tool… ou https://raid-helper.dev/event/…"></textarea>
+    <textarea id="imp-texte" placeholder="https://raid-helper.xyz/raidplan/… — ou export JSON/CSV du Composition Tool"></textarea>
     <div class="boutons">
       <button class="btn" id="btn-analyser">⬇ Importer</button>
       <button class="btn discret" id="btn-raz">↺ Réinitialiser</button>
@@ -208,6 +209,8 @@ const AFFECTES = {};
 let GENS = [];
 let MENTIONS = {};
 const CLE_STOCK = 'eden-organisateur';
+const VER_STOCK = 6;   // à incrémenter quand la logique change : invalide les
+                       // sauvegardes des anciennes versions de la page
 
 function razEtat() {
   for (const p of POSTES) AFFECTES[p.id] = {nom: p.defaut, classe: p.classe, spec: p.spec};
@@ -282,13 +285,13 @@ function appliquer() {
 function sauver() {
   try {
     localStorage.setItem(CLE_STOCK, JSON.stringify(
-      {v: ORIGINAUX.length, affectes: AFFECTES, gens: GENS, mentions: MENTIONS}));
+      {ver: VER_STOCK, v: ORIGINAUX.length, affectes: AFFECTES, gens: GENS, mentions: MENTIONS}));
   } catch (e) {}
 }
 function restaurer() {
   try {
     const d = JSON.parse(localStorage.getItem(CLE_STOCK) || 'null');
-    if (!d || d.v !== ORIGINAUX.length) return false;
+    if (!d || d.ver !== VER_STOCK || d.v !== ORIGINAUX.length) return false;
     for (const p of POSTES) AFFECTES[p.id] = d.affectes[p.id] || null;
     GENS = d.gens && d.gens.length ? d.gens : GENS;
     MENTIONS = d.mentions || {};
@@ -310,6 +313,34 @@ function iconeSpec(classe, spec) {
   return null;
 }
 
+function slotPersonne(occ, compte) {
+  const slot = document.createElement('div');
+  slot.className = 'slot';
+  const idx = iconeSpec(occ.classe, occ.spec);
+  if (idx !== null) {
+    const img = document.createElement('img');
+    img.src = IMAGES[idx]; img.alt = '';
+    slot.appendChild(img);
+  } else {
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.style.background = COULEUR_CLASSE[occ.classe] || 'var(--ink-faint)';
+    slot.appendChild(dot);
+  }
+  const nom = document.createElement('span');
+  nom.textContent = occ.nom;
+  nom.style.color = COULEUR_CLASSE[occ.classe] || 'var(--ink)';
+  slot.appendChild(nom);
+  if (compte && compte[occ.nom] > 1) {
+    const c = document.createElement('span');
+    c.className = 'cumul';
+    c.textContent = '\u26a0';
+    c.title = occ.nom + ' tient plusieurs postes sur les cartes';
+    slot.appendChild(c);
+  }
+  return slot;
+}
+
 function dessinerCompo() {
   const zone = document.getElementById('compo');
   zone.innerHTML = '';
@@ -318,6 +349,34 @@ function dessinerCompo() {
     const occ = AFFECTES[p.id];
     if (occ) compte[occ.nom] = (compte[occ.nom] || 0) + 1;
   }
+  // Après un import Raid-Helper : les groupes/positions du raidplan tels quels.
+  if (GENS.some(g => g.groupe)) {
+    const nbG = Math.max(...GENS.map(g => g.groupe || 1));
+    for (let g = 1; g <= nbG; g++) {
+      const membres = GENS.filter(x => (x.groupe || null) === g)
+                          .sort((a, b) => (a.pos || 99) - (b.pos || 99));
+      if (!membres.length) continue;
+      const div = document.createElement('div');
+      div.className = 'grp';
+      const h = document.createElement('h3');
+      h.textContent = 'Groupe ' + g;
+      div.appendChild(h);
+      for (const occ of membres) div.appendChild(slotPersonne(occ, compte));
+      zone.appendChild(div);
+    }
+    const sans = GENS.filter(x => !x.groupe);
+    if (sans.length) {
+      const div = document.createElement('div');
+      div.className = 'grp';
+      const h = document.createElement('h3');
+      h.textContent = 'Sans groupe';
+      div.appendChild(h);
+      for (const occ of sans) div.appendChild(slotPersonne(occ, compte));
+      zone.appendChild(div);
+    }
+    return;
+  }
+  // Sans import : la compo par défaut, organisée par postes.
   for (let g = 1; g <= 5; g++) {
     const div = document.createElement('div');
     div.className = 'grp';
@@ -326,35 +385,13 @@ function dessinerCompo() {
     div.appendChild(h);
     for (const p of POSTES.filter(p => p.groupe === g)) {
       const occ = AFFECTES[p.id];
-      const slot = document.createElement('div');
-      slot.className = 'slot' + (occ ? '' : ' vide');
-      if (occ) {
-        const idx = iconeSpec(occ.classe, occ.spec);
-        if (idx !== null) {
-          const img = document.createElement('img');
-          img.src = IMAGES[idx]; img.alt = '';
-          slot.appendChild(img);
-        } else {
-          const dot = document.createElement('span');
-          dot.className = 'dot';
-          dot.style.background = COULEUR_CLASSE[occ.classe] || 'var(--ink-faint)';
-          slot.appendChild(dot);
-        }
-        const nom = document.createElement('span');
-        nom.textContent = occ.nom;
-        nom.style.color = COULEUR_CLASSE[occ.classe] || 'var(--ink)';
-        slot.appendChild(nom);
-        if (compte[occ.nom] > 1) {
-          const c = document.createElement('span');
-          c.className = 'cumul';
-          c.textContent = '\u26a0';
-          c.title = occ.nom + ' tient plusieurs postes';
-          slot.appendChild(c);
-        }
-      } else {
+      if (occ) div.appendChild(slotPersonne(occ, compte));
+      else {
+        const slot = document.createElement('div');
+        slot.className = 'slot vide';
         slot.textContent = TIRET + ' ' + p.role;
+        div.appendChild(slot);
       }
-      div.appendChild(slot);
     }
     zone.appendChild(div);
   }
@@ -579,7 +616,7 @@ function norm(s) {
          .toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-function entree(nom, classe, spec) {
+function entree(nom, classe, spec, groupe, pos) {
   nom = String(nom || '').trim();
   const c = norm(classe);
   const s1 = norm(spec);                       // avec suffixe (holy1, protection1…)
@@ -587,7 +624,8 @@ function entree(nom, classe, spec) {
   if (!nom || HORS_JEU.includes(c)) return null;
   const cl = CLASSE_FR[c] || SPEC_CLASSE[s1] || SPEC_CLASSE[s] || null;
   const cat = (c in ROLES_RH && ROLES_RH[c]) || CAT_SPEC[s] || null;
-  return {nom: nom, classe: cl, cat: cat, spec: spec, brut: classe};
+  return {nom: nom, classe: cl, cat: cat, spec: spec, brut: classe,
+          groupe: groupe || null, pos: pos || null};
 }
 
 function parserImport(txt) {
@@ -599,7 +637,7 @@ function parserImport(txt) {
               : (j.signUps || j.signups || j.slots || j.raid || []);
     for (const e of arr) {
       const x = entree(e.name || e.userName || e.player, e.className || e.class,
-                       e.specName || e.spec);
+                       e.specName || e.spec, e.groupNumber, e.slotNumber);
       if (x) entrees.push(x);
     }
   } else {
@@ -625,16 +663,31 @@ async function importer() {
   const rap = document.getElementById('rapport');
   let txt = document.getElementById('imp-texte').value.trim();
   if (!txt) { rap.innerHTML = '<span class="ko">Colle d\u2019abord un export ou un lien.</span>'; return; }
-  const m = txt.match(/raid-helper\.dev\/event\/([0-9]+)/) || txt.match(/^([0-9]{15,})$/);
+  // Liens acceptés : raid-helper.xyz|dev /raidplan/<id> ou /event/<id>, ou un
+  // id nu (on tente raidplan puis event).
+  const m = txt.match(/raid-helper\.[a-z]+\/(raidplan|event)\/([0-9]+)/) ||
+            txt.match(/^()([0-9]{15,})$/);
   if (m) {
-    rap.innerHTML = 'R\u00e9cup\u00e9ration de l\u2019\u00e9v\u00e9nement\u2026';
-    try {
-      const r = await fetch('https://raid-helper.dev/api/v2/events/' + m[1]);
-      if (!r.ok) throw new Error(r.status);
-      txt = await r.text();
-    } catch (e) {
-      rap.innerHTML = '<span class="ko">Impossible de r\u00e9cup\u00e9rer l\u2019\u00e9v\u00e9nement (' +
-        e + ') — colle plut\u00f4t l\u2019export JSON/CSV.</span>';
+    rap.innerHTML = 'R\u00e9cup\u00e9ration du raidplan\u2026';
+    const essais = m[1] === 'event'
+      ? ['https://raid-helper.dev/api/v2/events/' + m[2]]
+      : m[1] === 'raidplan'
+        ? ['https://raid-helper.dev/api/raidplan/' + m[2]]
+        : ['https://raid-helper.dev/api/raidplan/' + m[2],
+           'https://raid-helper.dev/api/v2/events/' + m[2]];
+    let ok = false, derniere = null;
+    for (const url of essais) {
+      try {
+        const r = await fetch(url);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        txt = await r.text();
+        ok = true;
+        break;
+      } catch (e) { derniere = e; }
+    }
+    if (!ok) {
+      rap.innerHTML = '<span class="ko">Impossible de r\u00e9cup\u00e9rer le raidplan (' +
+        derniere + ') — colle plut\u00f4t l\u2019export JSON/CSV (bouton Export du Composition Tool).</span>';
       return;
     }
   }
@@ -694,7 +747,8 @@ async function importer() {
   // compo courante pour les menus/sélecteurs = TOUS les inscrits (même ceux
   // sans poste : l'orga peut les placer à la main)
   GENS = entrees.map(e => ({nom: e.nomCourt || e.nom.split('/')[0].trim(),
-                            classe: e.classe, spec: e.spec, cat: e.cat}));
+                            classe: e.classe, spec: e.spec, cat: e.cat,
+                            groupe: e.groupe, pos: e.pos}));
   GENS = GENS.filter((g, i) => GENS.findIndex(x => x.nom === g.nom && x.classe === g.classe) === i);
   rap.innerHTML = lignes.join('<br>');
   appliquer();
