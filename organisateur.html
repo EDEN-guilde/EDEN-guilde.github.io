@@ -370,6 +370,66 @@ function echanger(c, idA, idB) {
   appliquer();
 }
 
+// ---- Archimonde (carte 4) : couverture par groupe ---------------------------
+// De préférence un Chaman (totem Séisme anti-peur) et un décurseur
+// (Mage/Druide, Poigne de la Légion) dans CHAQUE groupe. Corrigé par des
+// échanges de places locaux à la carte, recalculés à chaque import ; les
+// amélios restent naturellement aux groupes CaC (1-2) via le placement global.
+const CARTE_ARCHIMONDE = 4;
+function ajusterArchimonde(lignes) {
+  delete PERM[CARTE_ARCHIMONDE];
+  const perm = {};
+  const src = id => perm[id] !== undefined ? perm[id] : id;
+  const occ = p => AFFECTES[src(p.id)] || null;
+  const RES = [
+    [o => o && o.classe === 'Chaman', 'chaman (S\u00e9isme)'],
+    [o => o && (o.classe === 'Mage' || o.classe === 'Druide'), 'd\u00e9curseur (mage/druide)'],
+  ];
+  const Z = {tank: 'avant', cac: 'avant', dist: 'arriere', heal: 'arriere'};
+  // les tanks gardent leur marque sur la carte (MT/T2/T3) : on ne les bouge pas
+  const cands = POSTES.filter(p => p.cat !== 'tank');
+  const compte = (g, est) => cands.filter(p => p.groupe === g && est(occ(p))).length;
+  for (const [est, lib] of RES) {
+    for (let g = 1; g <= 5; g++) {
+      if (compte(g, est)) continue;
+      let fait = false;
+      // affinité décroissante : même rôle, même zone, n'importe quel poste
+      for (const affinite of [(a, b) => a.cat === b.cat,
+                              (a, b) => Z[a.cat] === Z[b.cat],
+                              () => true]) {
+        const donneurs = [1, 2, 3, 4, 5]
+          .filter(d => d !== g && compte(d, est) >= 2)
+          .sort((a, b) => compte(b, est) - compte(a, est));
+        for (const d of donneurs) {
+          for (const pa of cands.filter(p => p.groupe === d && est(occ(p)))) {
+            for (const pb of cands.filter(p => p.groupe === g && !est(occ(p)) && affinite(pa, p))) {
+              // ne pas vider g de son unique exemplaire de l'AUTRE ressource
+              const autre = RES.find(r => r[0] !== est);
+              if (autre && autre[0](occ(pb)) && compte(g, autre[0]) <= 1) continue;
+              const x = src(pa.id), y = src(pb.id);
+              perm[pa.id] = y; perm[pb.id] = x;
+              if (perm[pa.id] === pa.id) delete perm[pa.id];
+              if (perm[pb.id] === pb.id) delete perm[pb.id];
+              const oa = AFFECTES[x], ob = AFFECTES[y];
+              lignes.push('<span class="warn">Archimonde</span> : ' + oa.nom +
+                          ' \u21c4 ' + (ob ? ob.nom : 'poste vacant') +
+                          ' \u2014 ' + lib + ' pour le groupe ' + g);
+              fait = true; break;
+            }
+            if (fait) break;
+          }
+          if (fait) break;
+        }
+        if (fait) break;
+      }
+      if (!fait)
+        lignes.push('<span class="ko">Archimonde : aucun ' + lib +
+                    ' disponible pour le groupe ' + g + '.</span>');
+    }
+  }
+  if (Object.keys(perm).length) PERM[CARTE_ARCHIMONDE] = perm;
+}
+
 // ---- sauvegarde navigateur --------------------------------------------------
 function sauver() {
   try {
@@ -949,6 +1009,7 @@ async function importer() {
                             classe: e.classe, spec: e.spec, cat: e.cat,
                             groupe: e.groupe, pos: e.pos}));
   GENS = GENS.filter((g, i) => GENS.findIndex(x => x.nom === g.nom && x.classe === g.classe) === i);
+  ajusterArchimonde(lignes);
   rap.innerHTML = lignes.join('<br>');
   appliquer();
 }
