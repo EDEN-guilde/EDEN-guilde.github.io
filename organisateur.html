@@ -198,6 +198,7 @@ dialog::backdrop{background:#000B}
     <label>URL du relais (script.google.com/…/exec)</label>
     <input type="text" id="pub-url" placeholder="https://script.google.com/macros/s/…/exec">
   </div>
+  <div id="pub-auteur" style="margin:4px 0 10px; font-size:13.5px"></div>
   <label class="case"><input type="checkbox" id="pub-sans-discord">
     Mettre à jour le Sheet <b>sans</b> annoncer sur Discord</label>
   <div id="pub-etat"></div>
@@ -950,7 +951,55 @@ async function rendreCarte(i, largeur) {
   } finally { URL.revokeObjectURL(url); }
 }
 
-const URL_RELAIS = "https://script.google.com/macros/s/AKfycbw4n7zBi3CIRMDOO-QpGZjXq5ug_x4Q49OuDhmZJoiN15tv2_spYuPieerC7lXD8d0c/exec";   // câblée à la construction (relais.txt)
+const URL_RELAIS = "https://script.google.com/macros/s/AKfycbw4n7zBi3CIRMDOO-QpGZjXq5ug_x4Q49OuDhmZJoiN15tv2_spYuPieerC7lXD8d0c/exec";     // câblée à la construction (relais.txt)
+const APP_DISCORD = "";   // client id OAuth (discord_app.txt)
+
+// ---- identité Discord du publieur (OAuth « identify ») ----------------------
+function auteurDiscord() {
+  try { return JSON.parse(localStorage.getItem('eden-discord') || 'null'); }
+  catch (e) { return null; }
+}
+function majAuteur() {
+  const zone = document.getElementById('pub-auteur');
+  const a = auteurDiscord();
+  if (a) {
+    zone.innerHTML = 'Annonce publi\u00e9e en tant que ' +
+      (a.avatar ? '<img src="' + a.avatar + '" style="width:20px;height:20px;border-radius:50%;vertical-align:-5px"> ' : '') +
+      '<b>' + a.nom + '</b> \u2014 <a href="#" id="pub-deco" style="color:var(--gold)">changer</a>';
+    document.getElementById('pub-deco').addEventListener('click', ev => {
+      ev.preventDefault();
+      localStorage.removeItem('eden-discord');
+      majAuteur();
+    });
+  } else if (APP_DISCORD) {
+    zone.innerHTML = '<button class="btn" id="pub-login">\ud83d\udd17 Se connecter avec Discord</button>' +
+      ' <span style="color:var(--ink-faint);font-size:12px">pour signer l\u2019annonce \u00e0 ton nom</span>';
+    document.getElementById('pub-login').addEventListener('click', () => {
+      location.href = 'https://discord.com/oauth2/authorize?client_id=' + APP_DISCORD +
+        '&response_type=token&scope=identify&redirect_uri=' +
+        encodeURIComponent(location.origin + location.pathname);
+    });
+  } else {
+    zone.innerHTML = '<span style="color:var(--ink-faint);font-size:12px">' +
+      'Connexion Discord non configur\u00e9e \u2014 l\u2019annonce partira au nom de l\u2019Organisateur.</span>';
+  }
+}
+// retour d'OAuth : le token est dans le fragment (#access_token=…)
+(function () {
+  const m = location.hash.match(/access_token=([^&]+)/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  fetch('https://discord.com/api/users/@me', {headers: {Authorization: 'Bearer ' + m[1]}})
+    .then(r => r.json())
+    .then(u => {
+      const a = {nom: u.global_name || u.username,
+                 avatar: u.avatar ? 'https://cdn.discordapp.com/avatars/' + u.id + '/' + u.avatar + '.png' : null};
+      try { localStorage.setItem('eden-discord', JSON.stringify(a)); } catch (e) {}
+      document.getElementById('btn-publier').click();
+    })
+    .catch(() => {});
+})();
+
 const dlgPub = document.getElementById('dlg-pub');
 document.getElementById('btn-publier').addEventListener('click', () => {
   if (URL_RELAIS) document.getElementById('pub-config').style.display = 'none';
@@ -961,6 +1010,7 @@ document.getElementById('btn-publier').addEventListener('click', () => {
     } catch (e) {}
   }
   document.getElementById('pub-etat').innerHTML = '';
+  majAuteur();
   dlgPub.showModal();
 });
 document.getElementById('pub-fermer').addEventListener('click', () => dlgPub.close());
@@ -973,6 +1023,11 @@ document.getElementById('pub-envoyer').addEventListener('click', async () => {
     return;
   }
   try { localStorage.setItem('eden-pub', JSON.stringify({url: url})); } catch (e) {}
+  const sansDiscord = document.getElementById('pub-sans-discord').checked;
+  if (!sansDiscord && APP_DISCORD && !auteurDiscord()) {
+    et.innerHTML = '<span class="ko">Connecte-toi avec Discord (ou coche \u00ab sans annoncer \u00bb).</span>';
+    return;
+  }
   const bouton = document.getElementById('pub-envoyer');
   bouton.disabled = true;
   try {
@@ -994,7 +1049,7 @@ document.getElementById('pub-envoyer').addEventListener('click', async () => {
     et.textContent = 'Envoi au Google Sheet\u2026 (peut prendre une minute)';
     const r = await fetch(url, {method: 'POST',
       body: JSON.stringify({cartes: cartes, postes: postes, message: message,
-                            sansDiscord: document.getElementById('pub-sans-discord').checked})});
+                            auteur: auteurDiscord(), sansDiscord: sansDiscord})});
     const j = await r.json();
     if (j.ok) {
       et.innerHTML = '<span class="ok">\u2714 Publi\u00e9 : ' + j.images +
