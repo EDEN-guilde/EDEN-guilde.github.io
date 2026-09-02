@@ -1049,10 +1049,10 @@ async function importer() {
   // frontline tank<->cac), n'importe où — les postes à rôle spécial (strict :
   // tank P4 démoniste, Zerevor mage, féral Frappe haineuse) en tout dernier
   // recours, avec un ⚠ pour vérifier leurs mentions.
-  // Il n'y a PAS de compo type : la zone jouée prime toujours — un joueur
-  // distance ne va JAMAIS sur un poste CaC (ni l'inverse). S'il ne reste
-  // aucun poste libre de son côté, il reste « à placer à la main » (menu ➕
-  // sur les cartes : rangée de bloc ou mini-jeton déplaçable).
+  // Il n'y a PAS de compo type : la zone jouée prime — un joueur distance ne
+  // va sur un poste CaC (ou l'inverse) qu'en TOUT dernier recours, quand plus
+  // aucun poste de son côté n'est libre, avec un ⚠ explicite : TOUT LE MONDE
+  // est placé, et l'orga repositionne le hors-zone à la main (drag/échanges).
   const ZONE = {tank: 'avant', cac: 'avant', dist: 'arriere', heal: 'arriere'};
   const memeZone = (p, e) => !e.cat || ZONE[p.cat] === ZONE[e.cat];
   const phases = [
@@ -1067,6 +1067,11 @@ async function importer() {
      ' <span class="ko">\u26a0 poste \u00e0 r\u00f4le sp\u00e9cial : v\u00e9rifie ses mentions (clic sur les cartes)</span>'],
     [(p, e) => memeZone(p, e),
      ' <span class="ko">\u26a0 poste \u00e0 r\u00f4le sp\u00e9cial ET hors r\u00f4le : v\u00e9rifie ses mentions</span>'],
+    [(p, e) => !p.strict,
+     ' <span class="ko">\u26a0 HORS ZONE (avant/arri\u00e8re) : repositionne-le sur les cartes ' +
+     '(glisse son jeton ou \u00e9change-le au clic)</span>'],
+    [(p, e) => true,
+     ' <span class="ko">\u26a0 poste \u00e0 r\u00f4le sp\u00e9cial ET hors zone : v\u00e9rifie tout</span>'],
   ];
   for (const [ok, note] of phases) {
     for (const e of entrees) {
