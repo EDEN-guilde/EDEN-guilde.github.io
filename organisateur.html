@@ -1417,12 +1417,60 @@ document.getElementById('pub-envoyer').addEventListener('click', async () => {
       // nom) — libellé unique par alias, donc retrouvable et réversible.
       for (const a of p.alias) postes.push([a, occ ? occ.nom : a + ' (absent)']);
     }
+    // Consignes DYNAMIQUES : le texte de certaines cases des tableaux latéraux
+    // dépend de la COMPO — « salves » n'a de sens que si l'occupant du poste
+    // est chaman, et les lignes Illidan citent les tanks de flamme réels.
+    // Le relais écrit la cellule à DROITE de l'étiquette du poste (onglet donné).
+    const occDe = d => { const p = POSTES.find(x => x.defaut === d);
+                         return (p && AFFECTES[p.id]) || null; };
+    const nomDe = d => { const o = occDe(d); return o ? o.nom : d; };
+    const consignes = [];
+    // [poste, onglet, texte si l'occupant est chaman, texte sinon]
+    const SELON_CHAMAN = [
+      ['Tafoi', 'Rage Winterchill', 'Salves sur les casters.',
+       'Soins de zone sur les casters.'],
+      ['Tafoi', 'Archimonde', 'Salves raid. Garde sa Larme.',
+       'Soins de raid. Garde sa Larme.'],
+      ['Tafoi', "Naj'entus", 'Salves NON-STOP, burst apr\u00e8s chaque Explosion des mar\u00e9es.',
+       'Heal raid NON-STOP, burst apr\u00e8s chaque Explosion des mar\u00e9es.'],
+      ['Tafoi', 'Reliquaire des \u00e2mes', 'P3 : spam + Vague de mana en second. P2 : STOP.',
+       'P3 : spam heal. P2 : STOP.'],
+      ['Tafoi', 'Gurtogg', '\u2b50 Soake et salve avec son GROUPE 4.',
+       '\u2b50 Soake et soigne avec son GROUPE 4.'],
+      ['Tafoi', 'M\u00e8re Shahraz', '\u2b50 Salve sur le STACK TANKS prioritaire.',
+       '\u2b50 Soins prioritaires sur le STACK TANKS.'],
+      ['Bartonfunk', 'Rage Winterchill', 'Salves sur le pack CaC.',
+       'Soins de zone sur le pack CaC.'],
+      ['Bartonfunk', "Kaz'rogal", '\u2b50 Salve sur le STACK de tanks \u2014 le rebond sur les 3 est parfait.',
+       '\u2b50 Soins sur le STACK de tanks.'],
+      ['Bartonfunk', 'Archimonde', 'Salves raid. Garde sa Larme.',
+       'Soins de raid. Garde sa Larme.'],
+      ['Bartonfunk', "Naj'entus", 'Salves NON-STOP, burst apr\u00e8s chaque Explosion des mar\u00e9es.',
+       'Heal raid NON-STOP, burst apr\u00e8s chaque Explosion des mar\u00e9es.'],
+      ['Bartonfunk', 'Reliquaire des \u00e2mes', 'P3 : spam + Vague de mana D\u00c8S le d\u00e9but. P2 : STOP.',
+       'P3 : spam heal D\u00c8S le d\u00e9but. P2 : STOP.'],
+      ['Bartonfunk', 'Gurtogg', '\u2b50 Soake et salve avec son GROUPE 3.',
+       '\u2b50 Soake et soigne avec son GROUPE 3.'],
+      ['Bartonfunk', 'M\u00e8re Shahraz', '\u2b50 Salve sur le STACK TANKS prioritaire.',
+       '\u2b50 Soins prioritaires sur le STACK TANKS.'],
+    ];
+    for (const [alias, feuille, siChaman, sinon] of SELON_CHAMAN) {
+      const o = occDe(alias);
+      consignes.push([alias, feuille, o && o.classe === 'Chaman' ? siChaman : sinon]);
+    }
+    // Illidan P2 : citer les tanks de flamme RÉELS (les anciens « HENZÔ » /
+    // « KHANYZZ » en majuscules échappaient à la substitution des noms).
+    consignes.push(['Bartonfunk', 'Illidan',
+      'P2 : ' + nomDe('Henz\u00f8').toUpperCase() + ' (Flamme 1) \u00b7 sinon raid.']);
+    consignes.push(['Tafoi', 'Illidan',
+      'P2 : ' + nomDe('Khanyzz').toUpperCase() + ' (Flamme 2) \u00b7 sinon raid.']);
     const message = '\ud83d\udccb **Assignations EDEN mises \u00e0 jour** (' +
       new Date().toLocaleDateString('fr-FR') +
       ') \u2014 cartes et attributions du prochain raid :';
     et.textContent = 'Envoi au Google Sheet\u2026 (peut prendre une minute)';
     const r = await fetch(url, {method: 'POST',
-      body: JSON.stringify({cartes: cartes, postes: postes, message: message,
+      body: JSON.stringify({cartes: cartes, postes: postes, consignes: consignes,
+                            message: message,
                             auteur: auteurDiscord(), sansDiscord: sansDiscord})});
     const j = await r.json();
     if (j.ok) {
