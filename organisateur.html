@@ -1052,9 +1052,28 @@ document.getElementById('pub-envoyer').addEventListener('click', async () => {
                             auteur: auteurDiscord(), sansDiscord: sansDiscord})});
     const j = await r.json();
     if (j.ok) {
+      // l'annonce Discord part du navigateur du membre (les IP d'Apps Script
+      // sont bloquées par Discord) — signée de son pseudo/avatar
+      let discordTxt = sansDiscord ? 'd\u00e9sactiv\u00e9 pour cet envoi' : 'non configur\u00e9';
+      if (j.webhook) {
+        et.textContent = 'Annonce Discord\u2026';
+        const a = auteurDiscord();
+        const charge = {content: message + '\n' + (j.lien || '')};
+        if (a && a.nom) {
+          charge.username = a.nom.slice(0, 80);
+          if (a.avatar) charge.avatar_url = a.avatar;
+        }
+        try {
+          const rd = await fetch(j.webhook, {method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(charge)});
+          discordTxt = rd.ok ? 'annonce publi\u00e9e' + (a ? ' par ' + a.nom : '')
+                             : '\u00e9chec (HTTP ' + rd.status + ')';
+        } catch (e2) { discordTxt = '\u00e9chec (' + e2 + ')'; }
+      }
       et.innerHTML = '<span class="ok">\u2714 Publi\u00e9 : ' + j.images +
         ' carte(s) remplac\u00e9e(s), ' + j.textes + ' nom(s) mis \u00e0 jour \u00b7 Discord : ' +
-        j.discord + '</span>' +
+        discordTxt + '</span>' +
         (j.erreurs && j.erreurs.length ? '<br><span class="ko">' + j.erreurs.join('<br>') + '</span>' : '');
     } else {
       et.innerHTML = '<span class="ko">Refus\u00e9 : ' + (j.erreur || '?') + '</span>';
