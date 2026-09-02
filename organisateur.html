@@ -171,10 +171,10 @@ dialog::backdrop{background:#000B}
     <p>Colle le <b>lien du raidplan</b> (raid-helper.xyz/raidplan/…) ou de
     l'événement, ou l'export JSON/CSV du <b>Composition Tool</b>, puis Importer.
     Le résumé en bas reprend les groupes du raidplan tels quels.
-    Chaque raid part d'une feuille blanche : les inscrits sont placés par
-    classe puis par rôle — <b>jamais hors rôle</b> (pas de DPS sur un poste
-    heal). Ce qui ne se place pas tout seul reste à ta main : un poste sans
-    inscrit disparaît des cartes et se réattribue ci-dessous.</p>
+    Chaque raid part d'une feuille blanche : <b>tous les inscrits sont placés</b>
+    par affinité (classe, rôle, zone), les cas à vérifier sont marqués ⚠ dans le
+    rapport. Un poste sans inscrit disparaît des cartes et se réattribue
+    ci-dessous.</p>
     <textarea id="imp-texte" placeholder="https://raid-helper.xyz/raidplan/… — ou export JSON/CSV du Composition Tool"></textarea>
     <div class="boutons">
       <button class="btn" id="btn-analyser">⬇ Importer</button>
@@ -869,14 +869,23 @@ async function importer() {
     // homonyme d'un poste déjà pris : traité comme un nouveau via les phases
   }
   // 1-2. placements automatiques : JAMAIS hors rôle (pas de DPS sur un poste
-  // heal, etc.) — même classe + même rôle, puis même rôle seul. Le reste est
-  // laissé à l'orga via les sélecteurs.
-  // Un poste « strict » (tank P4 démoniste, Zerevor mage, féral Frappe
-  // haineuse) n'accepte en automatique que la même classe : pas de chaman
-  // élém « tank Illidan P4 ».
+  // TOUT LE MONDE est placé (la compo importée fait foi), par affinité
+  // décroissante : même classe+rôle, même rôle, même zone (backline heal<->dist,
+  // frontline tank<->cac), n'importe où — les postes à rôle spécial (strict :
+  // tank P4 démoniste, Zerevor mage, féral Frappe haineuse) en tout dernier
+  // recours, avec un ⚠ pour vérifier leurs mentions.
+  const ZONE = {tank: 'avant', cac: 'avant', dist: 'arriere', heal: 'arriere'};
   const phases = [
     [(p, e) => p.classe === e.classe && p.cat === e.cat, ''],
-    [(p, e) => e.cat && p.cat === e.cat && !p.strict, ' <span class="warn">(classe diff\u00e9rente, m\u00eame r\u00f4le)</span>'],
+    [(p, e) => e.cat && p.cat === e.cat && !p.strict,
+     ' <span class="warn">(classe diff\u00e9rente, m\u00eame r\u00f4le)</span>'],
+    [(p, e) => e.cat && ZONE[p.cat] === ZONE[e.cat] && !p.strict,
+     ' <span class="warn">(r\u00f4le diff\u00e9rent, m\u00eame zone)</span>'],
+    [(p, e) => !p.strict, ' <span class="warn">(placement libre)</span>'],
+    [(p, e) => e.cat && p.cat === e.cat,
+     ' <span class="ko">\u26a0 poste \u00e0 r\u00f4le sp\u00e9cial : v\u00e9rifie ses mentions (clic sur les cartes)</span>'],
+    [(p, e) => true,
+     ' <span class="ko">\u26a0 poste \u00e0 r\u00f4le sp\u00e9cial ET hors r\u00f4le : v\u00e9rifie ses mentions</span>'],
   ];
   for (const [ok, note] of phases) {
     for (const e of entrees) {
@@ -894,7 +903,7 @@ async function importer() {
   for (const e of entrees.filter(e => !e.place))
     lignes.push('<span class="ko">' + e.nom.split('/')[0].trim() + '</span> (' +
                 (e.classe || e.brut || '?') + (e.cat ? ' \u00b7 ' + e.cat : '') +
-                ') : aucun poste libre de son r\u00f4le — \u00e0 placer via les s\u00e9lecteurs ci-dessous.');
+                ') : plus aucun poste libre (26e inscrit ou plus).');
   for (const id of libres) {
     const p = POSTES.find(p => p.id === id);
     lignes.push('<span class="ko">Poste non pourvu</span> : ' + p.role +
