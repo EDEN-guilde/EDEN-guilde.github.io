@@ -298,11 +298,24 @@ function substituer(orig, table) {
   return orig.replace(rx, m => table[m] || '');
 }
 
-// Nom affiché à l'emplacement du poste p sur la carte c (échanges compris).
-function nomAffiche(c, p) {
+// Occupant affiché à l'emplacement du poste p sur la carte c (échanges compris).
+// Cas spécial Gurtogg (carte 9) : les colonnes « Groupe 3/4/5 » (soak Sang
+// bouillant) reprennent les VRAIS groupes du raidplan importé, dans l'ordre.
+const CARTE_GURTOGG = 9;
+function occPoste(c, p) {
+  if (c === CARTE_GURTOGG && p.groupe >= 3 && GENS.some(g => g.groupe)) {
+    const membres = GENS.filter(x => x.groupe === p.groupe)
+                        .sort((a, b) => (a.pos || 99) - (b.pos || 99));
+    const rang = POSTES.filter(q => q.groupe === p.groupe).findIndex(q => q.id === p.id);
+    return membres[rang] || null;
+  }
   const perm = PERM[c] || {};
   const src = perm[p.id] !== undefined ? perm[p.id] : p.id;
-  const occ = AFFECTES[src];
+  return AFFECTES[src] || null;
+}
+
+function nomAffiche(c, p) {
+  const occ = occPoste(c, p);
   return occ ? occ.nom : TIRET;
 }
 
@@ -955,9 +968,10 @@ const BOITES = [];
     }
     if (lignes.length < 2) continue;
     lignes.sort((a, b) => a.yT0 - b.yT0);
-    const rect = g.querySelector('rect');
-    BOITES.push({lignes: lignes, rect: rect,
-                 h0: rect ? parseFloat(rect.getAttribute('height')) : 0,
+    // les boîtes ont parfois PLUSIEURS rects de fond superposés : tous suivent
+    const rects = [...g.children].filter(e => e.tagName.toLowerCase() === 'rect')
+      .map(r => ({el: r, h0: parseFloat(r.getAttribute('height')) || 0}));
+    BOITES.push({lignes: lignes, rects: rects,
                  pas: lignes.length > 1 ? lignes[1].yT0 - lignes[0].yT0 : 0});
   }
 }
@@ -973,18 +987,16 @@ function compacterBoites() {
     for (const l of B.lignes) placerLigne(l, 0);
     const visibles = B.lignes.filter(l => l.ligneG.style.display !== 'none');
     visibles.forEach((l, k) => placerLigne(l, B.lignes[k].yT0 - l.yT0));
-    if (B.rect && B.pas)
-      B.rect.setAttribute('height',
-        Math.max(B.h0 - B.pas * (B.lignes.length - visibles.length), B.pas));
+    const retrait = B.pas * (B.lignes.length - visibles.length);
+    for (const r of B.rects)
+      r.el.setAttribute('height', Math.max(r.h0 - retrait, B.pas));
   }
 }
 
 function majJetons() {
   for (const L of LABELS) {
     const p = L.poste;
-    const perm = PERM[L.carte] || {};
-    const src = perm[p.id] !== undefined ? perm[p.id] : p.id;
-    let occ = AFFECTES[src];
+    let occ = occPoste(L.carte, p);
     const local = MENTIONS[L.idx];
     if (local) {
       const nomLoc = Object.values(local)[0];
