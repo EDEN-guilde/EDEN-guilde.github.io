@@ -495,9 +495,26 @@ function gensTries(p) {
 function dessinerVacants() {
   const zone = document.getElementById('vacants');
   const cibles = POSTES.filter(p => !AFFECTES[p.id] || AFFECTES[p.id].cumul);
-  if (!cibles.length) { zone.style.display = 'none'; zone.innerHTML = ''; return; }
+  // inscrits sans aucun poste : invisibles sur les cartes tant que l'orga ne
+  // les a pas placés — affichés en permanence ici pour ne pas les oublier
+  const occupes = new Set();
+  for (const p of POSTES) { const o = AFFECTES[p.id]; if (o) occupes.add(o.nom); }
+  const sansPoste = GENS.filter(g => !occupes.has(g.nom));
+  if (!cibles.length && !sansPoste.length) {
+    zone.style.display = 'none'; zone.innerHTML = ''; return;
+  }
   zone.style.display = 'block';
   zone.innerHTML = '<h3>Postes non pourvus — r\u00e9attribuer</h3>';
+  if (sansPoste.length) {
+    const l = document.createElement('div');
+    l.className = 'ligne';
+    l.innerHTML = '<span style="color:#E0A32E">\u26a0 Sans poste (absents des cartes) : ' +
+      sansPoste.map(g => '<b style="color:' + (COULEUR_CLASSE[g.classe] || 'inherit') + '">' +
+                         g.nom + '</b> (' + (g.classe || '?') + (g.cat ? ' \u00b7 ' + g.cat : '') + ')')
+               .join(', ') +
+      ' \u2014 place-les via les s\u00e9lecteurs ou un clic sur un nom des cartes.</span>';
+    zone.appendChild(l);
+  }
   for (const p of cibles) {
     const ligne = document.createElement('div');
     ligne.className = 'ligne';
