@@ -1347,10 +1347,11 @@ function dragAjout(g, cle, svg, base0) {
 function jetonFlottant(svg, nom, gens, cle, base0, marqueur, valeur) {
   const ic = iconeSpec(gens.classe, gens.spec);
   if (ic === null) return;
-  const taille = 24, r = taille / 2;
+  // même gabarit que les jetons libres des cartes (icône ~46px + nom à droite)
+  const taille = 46, r = taille / 2;
   const pos = POSITIONS[cle] || base0;
   const coul = COULEUR_CLASSE[gens.classe] || '#FFFFFF';
-  const fonte = 19;
+  const fonte = 20;
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   g.setAttribute(marqueur, valeur);
   g.setAttribute('class', 'deplacable');
@@ -1396,32 +1397,53 @@ function placerIconesAjouts() {
       jetonFlottant(svg, nom, gens, 'a' + L.idx + ':' + nom, base0, 'data-ajout', L.idx);
     });
   }
-  // 2. occupants HORS ZONE masqués par majJetons : jeton flottant automatique
-  // posé près d'une étiquette de LEUR côté (avant/arrière), déplaçable
-  for (const h of HORS_ZONE) {
-    const carte = document.getElementById('carte-' + h.carte);
+  // 2. joueurs HORS ZONE (surplus de compo, cat jouée ≠ cat du poste) :
+  // présents sur TOUTES les cartes — là où ni un poste ni un ajout manuel ne
+  // les affiche, un jeton flottant déplaçable est posé de LEUR côté
+  const horsZoneNoms = [];
+  for (const p of POSTES) {
+    const o = AFFECTES[p.id];
+    const g = o && GENS.find(x => x.nom === o.nom);
+    if (g && g.cat && ZONE_JETON[g.cat] !== ZONE_JETON[p.cat] &&
+        !horsZoneNoms.includes(o.nom))
+      horsZoneNoms.push(o.nom);
+  }
+  for (let ci = 0; ci < 16 && horsZoneNoms.length; ci++) {
+    const carte = document.getElementById('carte-' + ci);
     if (!carte || carte.hidden) continue;
-    const vus = NOMS_AFFICHES[h.carte];
-    if (vus && vus.has(h.nom)) continue;
-    const gens = GENS.find(x => x.nom === h.nom);
-    if (!gens || !gens.cat) continue;
-    const zone = ZONE_JETON[gens.cat];
     const svg = carte.querySelector('svg');
-    // ancre : première étiquette de SON côté située DANS le viewBox (les SVG
-    // sont rognés en « slice » : des éléments existent hors du cadre visible)
-    const vb = svg.viewBox.baseVal;
-    let base0 = [vb.x + vb.width / 2, vb.y + vb.height / 2];
-    for (const l of LABELS) {
-      if (l.carte !== h.carte || ZONE_JETON[l.poste.cat] !== zone) continue;
-      let bb = null;
-      try { bb = l.textEl.getBBox(); } catch (e) {}
-      if (!bb || !bb.width) continue;
-      if (bb.x < vb.x || bb.x > vb.x + vb.width - 80 ||
-          bb.y < vb.y + 60 || bb.y > vb.y + vb.height - 40) continue;
-      base0 = [bb.x + bb.width / 2, bb.y - 26];
-      break;
+    const vus = NOMS_AFFICHES[ci];
+    const ajoutes = new Set();
+    for (const k in AJOUTS) {
+      let c = -1;
+      if (k[0] === 'b') c = parseInt(k.slice(1));
+      else if (k[0] === 't') {
+        const L = LABELS.find(l => l.idx === +k.slice(1));
+        c = L ? L.carte : -1;
+      }
+      if (c === ci) for (const n of AJOUTS[k]) ajoutes.add(n);
     }
-    jetonFlottant(svg, h.nom, gens, 'z' + h.carte + ':' + h.nom, base0, 'data-horszone', '1');
+    for (const nom of horsZoneNoms) {
+      if ((vus && vus.has(nom)) || ajoutes.has(nom)) continue;
+      const gens = GENS.find(x => x.nom === nom);
+      if (!gens || !gens.cat) continue;
+      const zone = ZONE_JETON[gens.cat];
+      // ancre : première étiquette de SON côté située DANS le viewBox (les SVG
+      // sont rognés en « slice » : des éléments existent hors du cadre visible)
+      const vb = svg.viewBox.baseVal;
+      let base0 = [vb.x + vb.width / 2, vb.y + vb.height / 2];
+      for (const l of LABELS) {
+        if (l.carte !== ci || ZONE_JETON[l.poste.cat] !== zone) continue;
+        let bb = null;
+        try { bb = l.textEl.getBBox(); } catch (e) {}
+        if (!bb || !bb.width) continue;
+        if (bb.x < vb.x || bb.x > vb.x + vb.width - 80 ||
+            bb.y < vb.y + 60 || bb.y > vb.y + vb.height - 40) continue;
+        base0 = [bb.x + bb.width / 2, bb.y - 34];
+        break;
+      }
+      jetonFlottant(svg, nom, gens, 'z' + ci + ':' + nom, base0, 'data-horszone', '1');
+    }
   }
 }
 
