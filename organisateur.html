@@ -479,6 +479,38 @@ function ajusterArchimonde(lignes) {
                 ' \u21c4 ' + (ob ? ob.nom : 'poste vacant') +
                 ' \u2014 repositionnement c\u00f4t\u00e9 CaC/distance');
   }
+  // 3. répartition des mages entre les groupes distance (3-5) : côté casters
+  // ce sont EUX qui décursent (les férals n'ont pas à se démorpher) — un mage
+  // par groupe distance tant qu'il reste des mages à répartir (3 mages = un
+  // par groupe, 2 = deux groupes différents).
+  const estMage = o => o && o.classe === 'Mage';
+  for (const g of [3, 4, 5]) {
+    if (compte(g, estMage)) continue;
+    let best = null;
+    for (const d of [3, 4, 5]) {
+      if (d === g || compte(d, estMage) < 2) continue;
+      for (const pa of cands.filter(p => p.groupe === d && estMage(occ(p))))
+        for (const pb of cands.filter(p => p.groupe === g && !estMage(occ(p)))) {
+          let ok = true;
+          for (const [est] of RES)
+            for (const [gr, entre, sort] of [[d, occ(pb), occ(pa)], [g, occ(pa), occ(pb)]]) {
+              const apres = compte(gr, est) - (est(sort) ? 1 : 0) + (est(entre) ? 1 : 0);
+              if (apres < Math.min(1, compte(gr, est))) ok = false;
+            }
+          if (!ok) continue;
+          const score = horsZone(occ(pa), pb) + horsZone(occ(pb), pa) -
+                        horsZone(occ(pa), pa) - horsZone(occ(pb), pb);
+          if (!best || score < best.score) best = {pa, pb, score};
+        }
+    }
+    if (best) {
+      const oa = occ(best.pa), ob = occ(best.pb);
+      swap(best.pa, best.pb);
+      lignes.push('<span class="warn">Archimonde</span> : ' + oa.nom +
+                  ' \u21c4 ' + (ob ? ob.nom : 'poste vacant') +
+                  ' \u2014 un mage d\u00e9curseur pour le groupe ' + g);
+    }
+  }
   if (Object.keys(perm).length) PERM[CARTE_ARCHIMONDE] = perm;
 }
 
