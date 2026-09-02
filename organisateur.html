@@ -845,6 +845,7 @@ onglets.forEach(b => b.addEventListener('click', () => {
   b.classList.add('actif');
   document.querySelectorAll('.carte').forEach((c, i) =>
     c.hidden = (i !== Number(b.dataset.c)));
+  placerIconesAjouts();
 }));
 onglets[0].classList.add('actif');
 
@@ -1282,6 +1283,44 @@ function majJetons() {
   }
   majExtras();
   compacterBoites();
+  placerIconesAjouts();
+}
+
+// Icônes des ajouts « + Nom » sur les étiquettes HORS bloc : une pastille de
+// spé par nom ajouté, posée à droite du texte (les rangées de bloc, elles,
+// sont clonées avec leur icône par majExtras). La géométrie du texte n'est
+// mesurable que carte affichée : on repositionne aussi au clic d'onglet.
+function placerIconesAjouts() {
+  for (const L of LABELS) {
+    if (L.ligneG) continue;
+    const svg = L.textEl.ownerSVGElement;
+    svg.querySelectorAll('[data-ajout="' + L.idx + '"]').forEach(e => e.remove());
+    const noms = AJOUTS['t' + L.idx] || [];
+    if (!noms.length) continue;
+    const carte = document.getElementById('carte-' + L.carte);
+    if (!carte || carte.hidden) continue;
+    let bb;
+    try { bb = L.textEl.getBBox(); } catch (e) { continue; }
+    if (!bb || !bb.width) continue;
+    const taille = parseFloat(L.imageEl.getAttribute('width')) || 24;
+    let k = 0;
+    for (const nom of noms) {
+      const g = GENS.find(x => x.nom === nom);
+      const ic = g ? iconeSpec(g.classe, g.spec) : null;
+      if (ic === null) continue;
+      const im = L.imageEl.cloneNode(false);
+      im.removeAttribute('data-oxm');
+      im.setAttribute('href', IMAGES[ic]);
+      im.setAttribute('x', bb.x + bb.width + 5 + k * (taille + 4));
+      im.setAttribute('y', bb.y + bb.height / 2 - taille / 2);
+      im.setAttribute('width', taille);
+      im.setAttribute('height', taille);
+      im.setAttribute('data-ajout', L.idx);
+      im.style.display = '';
+      L.textEl.parentElement.insertBefore(im, L.textEl.nextSibling);
+      k++;
+    }
+  }
 }
 
 if (restaurer())
