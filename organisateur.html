@@ -341,9 +341,7 @@ function appliquer() {
   for (const [i, [node, orig, , ci]] of ORIGINAUX.entries()) {
     const local = MENTIONS[i];
     const table = local ? Object.assign({}, tables[ci], local) : tables[ci];
-    let t = substituer(orig, table);
-    const aj = AJOUTS['t' + i];
-    if (aj && aj.length && t.trim()) t = t + ' + ' + aj.join(' + ');
+    const t = substituer(orig, table);
     if (node.nodeValue !== t) node.nodeValue = t;
   }
   const nbM = Object.keys(MENTIONS).length;
@@ -1051,19 +1049,23 @@ async function importer() {
   // frontline tank<->cac), n'importe où — les postes à rôle spécial (strict :
   // tank P4 démoniste, Zerevor mage, féral Frappe haineuse) en tout dernier
   // recours, avec un ⚠ pour vérifier leurs mentions.
+  // Il n'y a PAS de compo type : la zone jouée prime toujours — un joueur
+  // distance ne va JAMAIS sur un poste CaC (ni l'inverse). S'il ne reste
+  // aucun poste libre de son côté, il reste « à placer à la main » (menu ➕
+  // sur les cartes : rangée de bloc ou mini-jeton déplaçable).
   const ZONE = {tank: 'avant', cac: 'avant', dist: 'arriere', heal: 'arriere'};
+  const memeZone = (p, e) => !e.cat || ZONE[p.cat] === ZONE[e.cat];
   const phases = [
     [(p, e) => p.classe === e.classe && p.cat === e.cat, ''],
     [(p, e) => e.cat && p.cat === e.cat && !p.strict,
      ' <span class="warn">(classe diff\u00e9rente, m\u00eame r\u00f4le)</span>'],
-    [(p, e) => e.posteHabituel === p,
+    [(p, e) => e.posteHabituel === p && memeZone(p, e),
      ' <span class="warn">(son poste habituel, r\u00f4le diff\u00e9rent)</span>'],
-    [(p, e) => e.cat && ZONE[p.cat] === ZONE[e.cat] && !p.strict,
+    [(p, e) => memeZone(p, e) && !p.strict,
      ' <span class="warn">(r\u00f4le diff\u00e9rent, m\u00eame zone)</span>'],
-    [(p, e) => !p.strict, ' <span class="warn">(placement libre)</span>'],
     [(p, e) => e.cat && p.cat === e.cat,
      ' <span class="ko">\u26a0 poste \u00e0 r\u00f4le sp\u00e9cial : v\u00e9rifie ses mentions (clic sur les cartes)</span>'],
-    [(p, e) => true,
+    [(p, e) => memeZone(p, e),
      ' <span class="ko">\u26a0 poste \u00e0 r\u00f4le sp\u00e9cial ET hors r\u00f4le : v\u00e9rifie ses mentions</span>'],
   ];
   for (const [ok, note] of phases) {
@@ -1082,7 +1084,9 @@ async function importer() {
   for (const e of entrees.filter(e => !e.place))
     lignes.push('<span class="ko">' + e.nom.split('/')[0].trim() + '</span> (' +
                 (e.classe || e.brut || '?') + (e.cat ? ' \u00b7 ' + e.cat : '') +
-                ') : plus aucun poste libre (26e inscrit ou plus).');
+                ') : aucun poste libre de son c\u00f4t\u00e9 (avant/arri\u00e8re) \u2014 ' +
+                'ajoute-le \u00e0 la main sur les cartes voulues (clic \u2192 \u2795, ' +
+                'mini-jeton d\u00e9pla\u00e7able ou rang\u00e9e de bloc).');
   for (const id of libres) {
     const p = POSTES.find(p => p.id === id);
     lignes.push('<span class="ko">Poste non pourvu</span> : ' + p.role +
@@ -1286,10 +1290,36 @@ function majJetons() {
   placerIconesAjouts();
 }
 
-// Icônes des ajouts « + Nom » sur les étiquettes HORS bloc : une pastille de
-// spé par nom ajouté, posée à droite du texte (les rangées de bloc, elles,
-// sont clonées avec leur icône par majExtras). La géométrie du texte n'est
-// mesurable que carte affichée : on repositionne aussi au clic d'onglet.
+// Ajouts « ➕ » sur une étiquette HORS bloc : un MINI-JETON indépendant
+// (icône + nom, sans « + » dans le texte d'origine), posé à côté de
+// l'étiquette et DÉPLAÇABLE à la souris (position mémorisée par nom).
+// Les rangées de bloc, elles, sont clonées avec leur icône par majExtras.
+// La géométrie n'est mesurable que carte affichée : re-rendu au clic d'onglet.
+function dragAjout(g, cle, svg, base0) {
+  g.addEventListener('pointerdown', ev => {
+    ev.preventDefault(); ev.stopPropagation();
+    let base = (POSITIONS[cle] || base0).slice();
+    const vb = svg.viewBox.baseVal;
+    const ech = vb.width / svg.getBoundingClientRect().width;
+    const dep = [ev.clientX, ev.clientY];
+    const orig = base.slice();
+    let bougeote = false;
+    function bouge(e2) {
+      if (Math.hypot(e2.clientX - dep[0], e2.clientY - dep[1]) > 3) bougeote = true;
+      base = [orig[0] + (e2.clientX - dep[0]) * ech,
+              orig[1] + (e2.clientY - dep[1]) * ech];
+      g.setAttribute('transform', 'translate(' + base[0] + ', ' + base[1] + ')');
+    }
+    function fin() {
+      if (bougeote) { DRAG_RECENT = Date.now(); POSITIONS[cle] = base.slice(); sauver(); }
+      document.removeEventListener('pointermove', bouge);
+      document.removeEventListener('pointerup', fin);
+    }
+    document.addEventListener('pointermove', bouge);
+    document.addEventListener('pointerup', fin);
+  });
+}
+
 function placerIconesAjouts() {
   for (const L of LABELS) {
     if (L.ligneG) continue;
@@ -1299,27 +1329,41 @@ function placerIconesAjouts() {
     if (!noms.length) continue;
     const carte = document.getElementById('carte-' + L.carte);
     if (!carte || carte.hidden) continue;
-    let bb;
-    try { bb = L.textEl.getBBox(); } catch (e) { continue; }
-    if (!bb || !bb.width) continue;
-    const taille = parseFloat(L.imageEl.getAttribute('width')) || 24;
-    let k = 0;
-    for (const nom of noms) {
-      const g = GENS.find(x => x.nom === nom);
-      const ic = g ? iconeSpec(g.classe, g.spec) : null;
-      if (ic === null) continue;
-      const im = L.imageEl.cloneNode(false);
-      im.removeAttribute('data-oxm');
-      im.setAttribute('href', IMAGES[ic]);
-      im.setAttribute('x', bb.x + bb.width + 5 + k * (taille + 4));
-      im.setAttribute('y', bb.y + bb.height / 2 - taille / 2);
-      im.setAttribute('width', taille);
-      im.setAttribute('height', taille);
-      im.setAttribute('data-ajout', L.idx);
-      im.style.display = '';
-      L.textEl.parentElement.insertBefore(im, L.textEl.nextSibling);
-      k++;
-    }
+    let bb = null;
+    try { bb = L.textEl.getBBox(); } catch (e) {}
+    const taille = Math.max(20, parseFloat(L.imageEl.getAttribute('width')) || 24);
+    const NS = 'http://www.w3.org/2000/svg';
+    noms.forEach((nom, k) => {
+      const gens = GENS.find(x => x.nom === nom);
+      const ic = gens ? iconeSpec(gens.classe, gens.spec) : null;
+      if (ic === null) return;
+      const cle = 'a' + L.idx + ':' + nom;
+      const base0 = bb && bb.width
+        ? [bb.x + bb.width + 10 + taille / 2, bb.y + bb.height / 2 + k * (taille + 12)]
+        : [60, 60 + k * (taille + 12)];
+      const pos = POSITIONS[cle] || base0;
+      const coul = COULEUR_CLASSE[gens.classe] || '#FFFFFF';
+      const fonte = Math.max(15, Math.round(taille * 0.8));
+      const g = document.createElementNS(NS, 'g');
+      g.setAttribute('data-ajout', L.idx);
+      g.setAttribute('class', 'deplacable');
+      g.setAttribute('transform', 'translate(' + pos[0] + ', ' + pos[1] + ')');
+      const r = taille / 2;
+      g.innerHTML =
+        '<rect x="' + (-r - 3) + '" y="' + (-r - 3) + '" width="' +
+          (taille + 12 + nom.length * fonte * 0.62) + '" height="' + (taille + 6) +
+          '" fill="transparent"></rect>' +
+        '<circle cx="0" cy="0" r="' + (r + 1.5) + '" fill="rgba(0,0,0,0.45)" stroke="' +
+          coul + '" stroke-width="1.5" style="pointer-events: none;"></circle>' +
+        '<image href="' + IMAGES[ic] + '" x="' + (-r) + '" y="' + (-r) + '" width="' + taille +
+          '" height="' + taille +
+          '" style="pointer-events: none; clip-path: circle(50% at 50% 50%);"></image>' +
+        '<text x="' + (r + 5) + '" y="0" text-anchor="start" dominant-baseline="central" fill="' +
+          coul + '" font-size="' + fonte + '" font-weight="600" style="pointer-events: none;">' +
+        '<tspan stroke="black" stroke-width="2.5" paint-order="stroke">' + nom + '</tspan></text>';
+      svg.appendChild(g);
+      dragAjout(g, cle, svg, base0);
+    });
   }
 }
 
