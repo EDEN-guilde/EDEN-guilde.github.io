@@ -862,11 +862,16 @@ async function importer() {
   for (const e of entrees) {
     const cles = [norm(e.nom)].concat(e.nom.split('/').map(norm));
     const p = cles.map(k => parNom[k]).find(Boolean);
-    if (p && libres.has(p.id)) {
-      libres.delete(p.id); e.place = true; e.nomCourt = p.defaut;
+    if (!p || !libres.has(p.id)) continue;   // homonyme déjà pris → phases
+    e.posteHabituel = p;
+    e.nomCourt = p.defaut;
+    // Le nom ne prime que si le RÔLE colle encore : Tafoi passé élémentaire ne
+    // doit pas garder son ancien poste heal pendant qu'un vrai soigneur se
+    // retrouve au CaC — son poste habituel reste un simple repli (phase dédiée).
+    if (!e.cat || e.cat === p.cat) {
+      libres.delete(p.id); e.place = true;
       AFFECTES[p.id] = {nom: p.defaut, classe: e.classe || p.classe, spec: e.spec || p.spec};
     }
-    // homonyme d'un poste déjà pris : traité comme un nouveau via les phases
   }
   // 1-2. placements automatiques : JAMAIS hors rôle (pas de DPS sur un poste
   // TOUT LE MONDE est placé (la compo importée fait foi), par affinité
@@ -879,6 +884,8 @@ async function importer() {
     [(p, e) => p.classe === e.classe && p.cat === e.cat, ''],
     [(p, e) => e.cat && p.cat === e.cat && !p.strict,
      ' <span class="warn">(classe diff\u00e9rente, m\u00eame r\u00f4le)</span>'],
+    [(p, e) => e.posteHabituel === p,
+     ' <span class="warn">(son poste habituel, r\u00f4le diff\u00e9rent)</span>'],
     [(p, e) => e.cat && ZONE[p.cat] === ZONE[e.cat] && !p.strict,
      ' <span class="warn">(r\u00f4le diff\u00e9rent, m\u00eame zone)</span>'],
     [(p, e) => !p.strict, ' <span class="warn">(placement libre)</span>'],
